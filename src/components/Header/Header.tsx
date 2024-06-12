@@ -1,59 +1,53 @@
 import React from "react";
+import { Link } from 'react-router-dom';
+import logo from '../../asserts/images/logo.svg';
 
+import ethimg from '../../asserts/images/Etherium.svg';
+import discord from '../../asserts/images/discord.svg';
+import opensea from '../../asserts/images/opensea.svg';
+import WalletConnect from '../WalletConnect';
 function Header() {
   return (
-    <div>
-      <header className="page-header">
-        <nav className="w-full h-10 bg-secondary-2 flex justify-between px-5 items-center">
-          <div className="flex items-center space-x-3 max-h-4 justify-center">
-            <a
-              href="https://twitter.com/cryptrovia?s=21&amp;t=WLld5Cs_nqsom9trE4dwmw"
-              target="_blank"
-            >
-              <img src="/pub/images/twitter.svg" />
-            </a>
-            <a href="https://discord.com/invite/8CUAqtkqcU" target="_blank">
-              <img src="/pub/images/discord.svg" />
-            </a>
-            <a href=" https://opensea.io/collection/cryptrovia" target="_blank">
-              <img src="/pub/images/opensea.svg" />
-            </a>
+    <header>
+      <nav className="w-full h-10 bg-secondary-2 flex justify-between px-5 items-center">
+        <div className="flex items-center space-x-3 max-h-4 justify-center">
+          <Link to="/">
+            <img src={ethimg} alt="Ethereum" />
+          </Link>
+          <Link to="/">
+            <img src={discord} alt="Discord" />
+          </Link>
+          <Link to="/">
+            <img src={opensea} alt="OpenSea" />
+          </Link>
+        </div>
+        <div className="flex items-center text-sm space-x-5 font-medium">
+          <div className="currency-switcher">
+          <select id="currency-switcher-select">
+          <option value="ETH" >ETH</option>
+          <option value="USC">USDC</option>
+          <option value="UST">USDT</option>
+          </select>
           </div>
-          <div className="flex items-center text-sm space-x-5 font-medium">
-            <img className="h-5" src="/pub/images/Etherium.svg" />
-
-            <div className="currency-switcher">
-              <select
-                id="currency-switcher-select"
-                name="currency"
-                data-action="currency-switcher"
-                data-ajax-url="https://cryptrovia.com/index.php/currencyswitcher/ajax/currency/"
-              >
-                <option value="ETH" selected>
-                  ETH{" "}
-                </option>
-                <option value="USC">USDC </option>
-                <option value="UST">USDT </option>
-              </select>
-            </div>
-
-            <a
-              href="https://cryptrovia.com/index.php/about-us"
-              className="text-black-1"
-            >
-              About us
-            </a>
-            <a
-              href="https://cryptrovia.com/index.php/faq"
-              className="text-black-1"
-            >
-              FAQs
-            </a>
-          </div>
-        </nav>
-      </header>
-    </div>
+          
+          <Link to="/about">About Us</Link>
+          <Link to="/contact">FAQs</Link>
+          
+        </div>
+      </nav>
+      <nav className="md:flex w-full h-20 px-5 justify-between items-center shadow-md bg-white">
+        <ul className="toplink flex space-x-4 lg:space-x-16 text-lg text-black-2 items-end">
+        <Link to="/"><img src={logo} alt="Logo" className="w-44 h-8 clogo" /></Link>
+          <Link to="/">Mint it now</Link>
+          <Link to="/">Redeem</Link>
+          <Link to="/">Drops</Link>
+        </ul>
+        <div className="flex items-center space-x-8 walletblock">
+       <WalletConnect/>
+        </div>
+      </nav>
+    </header>
   );
 }
-
+        
 export default Header;

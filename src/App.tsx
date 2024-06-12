@@ -1,17 +1,24 @@
-import { RouterProvider } from "react-router-dom";
-import { router } from "./routes/main";
-import Header from "./components/Header/Header";
+import React from "react";
+import { BrowserRouter as Router } from "react-router-dom"; // Importing BrowserRouter as Router
+import MainRouter from './routes/main'; // Importing the MainRouter component
+
+import Header from './components/Header/Header';
+import './App.css';
+import './styles/tailwind.css'; 
 
 function App() {
   return (
-    <div className="container">
-      <div id="header">
-        <Header />
+    <Router>
+      <div className="page-wrapper">
+        <div id="header">
+          <Header/>
+        </div>
+        <div id="main">
+        
+          <MainRouter />
+        </div>
       </div>
-      <div id="main">
-        <RouterProvider router={router} />
-      </div>
-    </div>
+    </Router>
   );
 }
 
