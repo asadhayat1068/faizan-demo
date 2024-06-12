@@ -1,11 +1,10 @@
 import React from "react";
-import { Link } from 'react-router-dom';
-import logo from '../../asserts/images/logo.svg';
+import { Link } from "react-router-dom";
+import logo from "../../asserts/images/logo.svg";
 
-import ethimg from '../../asserts/images/Etherium.svg';
-import discord from '../../asserts/images/discord.svg';
-import opensea from '../../asserts/images/opensea.svg';
-import WalletConnect from '../WalletConnect';
+import ethimg from "../../asserts/images/Etherium.svg";
+import discord from "../../asserts/images/discord.svg";
+import opensea from "../../asserts/images/opensea.svg";
 function Header() {
   return (
     <header>
@@ -23,31 +22,30 @@ function Header() {
         </div>
         <div className="flex items-center text-sm space-x-5 font-medium">
           <div className="currency-switcher">
-          <select id="currency-switcher-select">
-          <option value="ETH" >ETH</option>
-          <option value="USC">USDC</option>
-          <option value="UST">USDT</option>
-          </select>
+            <select id="currency-switcher-select">
+              <option value="ETH">ETH</option>
+              <option value="USC">USDC</option>
+              <option value="UST">USDT</option>
+            </select>
           </div>
-          
+
           <Link to="/about">About Us</Link>
           <Link to="/contact">FAQs</Link>
-          
         </div>
       </nav>
       <nav className="md:flex w-full h-20 px-5 justify-between items-center shadow-md bg-white">
         <ul className="toplink flex space-x-4 lg:space-x-16 text-lg text-black-2 items-end">
-        <Link to="/"><img src={logo} alt="Logo" className="w-44 h-8 clogo" /></Link>
+          <Link to="/">
+            <img src={logo} alt="Logo" className="w-44 h-8 clogo" />
+          </Link>
           <Link to="/">Mint it now</Link>
           <Link to="/">Redeem</Link>
           <Link to="/">Drops</Link>
         </ul>
-        <div className="flex items-center space-x-8 walletblock">
-       <WalletConnect/>
-        </div>
+        <div className="flex items-center space-x-8 walletblock">Connect</div>
       </nav>
     </header>
   );
 }
-        
+
 export default Header;
