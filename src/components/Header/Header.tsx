@@ -1,24 +1,23 @@
-import React from "react";
-import { Link } from "react-router-dom";
 import logo from "../../asserts/images/logo.svg";
 
 import ethimg from "../../asserts/images/Etherium.svg";
 import discord from "../../asserts/images/discord.svg";
 import opensea from "../../asserts/images/opensea.svg";
+import { Link } from "react-router-dom";
 function Header() {
   return (
     <header>
       <nav className="w-full h-10 bg-secondary-2 flex justify-between px-5 items-center">
         <div className="flex items-center space-x-3 max-h-4 justify-center">
-          <Link to="/">
-            <img src={ethimg} alt="Ethereum" />
-          </Link>
-          <Link to="/">
+          {/* <Link to="/" ref="dd"> */}
+          <img src={ethimg} alt="Ethereum" />
+          {/* </Link> */}
+          {/* <Link to="/">
             <img src={discord} alt="Discord" />
           </Link>
           <Link to="/">
             <img src={opensea} alt="OpenSea" />
-          </Link>
+          </Link> */}
         </div>
         <div className="flex items-center text-sm space-x-5 font-medium">
           <div className="currency-switcher">
@@ -29,18 +28,20 @@ function Header() {
             </select>
           </div>
 
-          <Link to="/about">About Us</Link>
-          <Link to="/contact">FAQs</Link>
+          {/* <Link to="/about">About Us</Link>
+          <Link to="/contact">FAQs</Link> */}
         </div>
       </nav>
       <nav className="md:flex w-full h-20 px-5 justify-between items-center shadow-md bg-white">
         <ul className="toplink flex space-x-4 lg:space-x-16 text-lg text-black-2 items-end">
+          {/* <Link to="/"> */}
           <Link to="/">
             <img src={logo} alt="Logo" className="w-44 h-8 clogo" />
           </Link>
-          <Link to="/">Mint it now</Link>
+          {/* </Link> */}
+          {/* <Link to="/">Mint it now</Link>
           <Link to="/">Redeem</Link>
-          <Link to="/">Drops</Link>
+          <Link to="/">Drops</Link> */}
         </ul>
         <div className="flex items-center space-x-8 walletblock">Connect</div>
       </nav>
