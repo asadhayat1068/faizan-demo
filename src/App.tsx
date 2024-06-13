@@ -1,18 +1,28 @@
-import React from "react";
-import logo from "./logo.svg";
+import { Outlet } from "react-router-dom";
+import Header from "./components/Header/Header";
 import "./App.css";
-import { RouterProvider } from "react-router-dom";
-import { router } from "./routes/main";
+import "./styles/tailwind.css";
+import "@rainbow-me/rainbowkit/styles.css";
+import { WagmiProvider } from "wagmi";
+import { defaultConfig, queryClient } from "./wallet";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 
 function App() {
   return (
-    <div>
-      <div id="header">
-        <h1>Header</h1>
-      </div>
-      <div id="main">
-        <RouterProvider router={router} />
-      </div>
+    <div className="page-wrapper">
+      <WagmiProvider config={defaultConfig}>
+        <QueryClientProvider client={queryClient}>
+          <RainbowKitProvider>
+            <div id="header">
+              <Header />
+            </div>
+            <div id="main">
+              <Outlet />
+            </div>
+          </RainbowKitProvider>
+        </QueryClientProvider>
+      </WagmiProvider>
     </div>
   );
 }
