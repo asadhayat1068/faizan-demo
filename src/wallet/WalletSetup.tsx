@@ -4,7 +4,7 @@ import { mainnet } from "wagmi/chains";
 
 export const defaultConfig = getDefaultConfig({
   appName: "Cryptrovia",
-  projectId: "cryptrovia",
+  projectId: (process.env.REACT_APP_PROJECT_ID || "").toString(),
   chains: [mainnet],
   ssr: false,
 });

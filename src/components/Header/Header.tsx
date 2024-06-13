@@ -5,7 +5,15 @@ import discord from "../../asserts/images/discord.svg";
 import opensea from "../../asserts/images/opensea.svg";
 import { Link } from "react-router-dom";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { useState } from "react";
 function Header() {
+  const [currentCurrency, setCurrentCurrency] = useState<string>("ETH");
+  const handleCurrencyChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    setCurrentCurrency(event.target.value);
+  };
+
   return (
     <header>
       <nav className="w-full h-10 bg-secondary-2 flex justify-between px-5 items-center">
@@ -22,11 +30,15 @@ function Header() {
         </div>
         <div className="flex items-center text-sm space-x-5 font-medium">
           <div className="currency-switcher">
-            <select id="currency-switcher-select">
+            <select
+              id="currency-switcher-select"
+              onChange={handleCurrencyChange}
+            >
               <option value="ETH">ETH</option>
-              <option value="USC">USDC</option>
-              <option value="UST">USDT</option>
+              <option value="USDC">USDC</option>
+              <option value="USDT">USDT</option>
             </select>
+            <p>Selected Token: {currentCurrency}</p>
           </div>
 
           <Link to="/about">About Us</Link>
