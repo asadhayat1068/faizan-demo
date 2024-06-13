@@ -1,17 +1,19 @@
 import logo from "../../asserts/images/logo.svg";
-
 import ethimg from "../../asserts/images/Etherium.svg";
 import discord from "../../asserts/images/discord.svg";
 import opensea from "../../asserts/images/opensea.svg";
 import { Link } from "react-router-dom";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useState } from "react";
+import {
+  CURRENCY,
+  useCurrencySelector,
+} from "../../providers/CurrencySelector/currencySelectorProvider";
 function Header() {
-  const [currentCurrency, setCurrentCurrency] = useState<string>("ETH");
+  const { updateCurrency } = useCurrencySelector();
   const handleCurrencyChange = (
     event: React.ChangeEvent<HTMLSelectElement>
   ) => {
-    setCurrentCurrency(event.target.value);
+    updateCurrency(event.target.value as CURRENCY);
   };
 
   return (
@@ -38,7 +40,6 @@ function Header() {
               <option value="USDC">USDC</option>
               <option value="USDT">USDT</option>
             </select>
-            <p>Selected Token: {currentCurrency}</p>
           </div>
 
           <Link to="/about">About Us</Link>

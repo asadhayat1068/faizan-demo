@@ -7,6 +7,7 @@ import { WagmiProvider } from "wagmi";
 import { defaultConfig, queryClient } from "./wallet";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import { CurrencySelectorProvider } from "./providers/CurrencySelector/currencySelectorProvider";
 
 function App() {
   return (
@@ -14,12 +15,14 @@ function App() {
       <WagmiProvider config={defaultConfig}>
         <QueryClientProvider client={queryClient}>
           <RainbowKitProvider>
-            <div id="header">
-              <Header />
-            </div>
-            <div id="main">
-              <Outlet />
-            </div>
+            <CurrencySelectorProvider>
+              <div id="header">
+                <Header />
+              </div>
+              <div id="main">
+                <Outlet />
+              </div>
+            </CurrencySelectorProvider>
           </RainbowKitProvider>
         </QueryClientProvider>
       </WagmiProvider>
