@@ -1,21 +1,38 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { createHashRouter } from "react-router-dom";
 import Home from "../pages/Home";
 import Redeem from "../pages/Redeem";
 import NotFoundPage from "../pages/NotFoundPage";
 import About from "../pages/About";
 import Contact from "../pages/Contact";
+import Items from "../pages/Items";
+import App from "../App";
 
-const MainRouter: React.FC = () => {
-  return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/redeem" element={<Redeem />} />
-      <Route path="/about" element={<About />} />
-      <Route path="/contact" element={<Contact />} />
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
-  );
-};
-
-export default MainRouter;
+export const hashRouter = createHashRouter([
+  {
+    path: "/",
+    element: <App />,
+    errorElement: <NotFoundPage />,
+    children: [
+      {
+        index: true,
+        element: <Home />,
+      },
+      {
+        path: "/redeem",
+        element: <Redeem />,
+      },
+      {
+        path: "/about",
+        element: <About />,
+      },
+      {
+        path: "/contact",
+        element: <Contact />,
+      },
+      {
+        path: "/items/:categoryId",
+        element: <Items />,
+      },
+    ],
+  },
+]);
