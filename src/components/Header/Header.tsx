@@ -4,6 +4,7 @@ import discord from "../../asserts/images/discord.svg";
 import opensea from "../../asserts/images/opensea.svg";
 import { Link } from "react-router-dom";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import CategoryMenu from './CategoryMenu';
 import {
   CURRENCY,
   useCurrencySelector,
@@ -59,6 +60,11 @@ function Header() {
           <ConnectButton />
         </div>
       </nav>
+      <div> 
+     
+      <CategoryMenu />
+   
+    </div>
     </header>
   );
 }
