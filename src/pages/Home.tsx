@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
 import banner from '../asserts/images/Banner.png';
-import ItemScroller from '../components/ItemScroller';
 import { useAPI } from '../apiContext';
 import Card from '../components/Card';
 import Spinner from '../components/Spinner';
