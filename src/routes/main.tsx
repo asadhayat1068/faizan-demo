@@ -5,6 +5,7 @@ import NotFoundPage from "../pages/NotFoundPage";
 import About from "../pages/About";
 import Contact from "../pages/Contact";
 import Items from "../pages/Items";
+import ItemDetail from "../pages/ItemDetail";
 import App from "../App";
 
 export const hashRouter = createHashRouter([
@@ -32,6 +33,10 @@ export const hashRouter = createHashRouter([
       {
         path: "/items/:categoryId",
         element: <Items />,
+      },
+      {
+        path: "/detail/:productId",
+        element: <ItemDetail />,
       },
     ],
   },

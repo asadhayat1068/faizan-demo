@@ -49,7 +49,7 @@ const CategoryMenu: React.FC = () => {
         <Link to={'/items/3579'}><img src={gamming} alt="gamming" className="w-full cursor-pointer" /></Link>
       </div>
       {isOpen && (
-        <div className="absolute left-0 w-full max-w-4xl bg-white shadow-lg rounded-lg">
+        <div className="absolute left-0 w-full max-w-4xl bg-white shadow-lg rounded-lg z-50">
           <div className="grid grid-cols-4 gap-2 p-2">
             {categories.map((category: Category) => (
               <Link

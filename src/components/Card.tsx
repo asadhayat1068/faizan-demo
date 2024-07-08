@@ -1,14 +1,15 @@
 // Card.tsx
 import React, { useState } from 'react';
 import eth from '../asserts/images/Etherium.svg';
-
+import { Link } from "react-router-dom";
 type CardProps = {
   imgSrc: string;
   title: string;
   price: number;
+  id:number;
 };
 
-const Card: React.FC<CardProps> = ({ imgSrc, title, price }) => {
+const Card: React.FC<CardProps> = ({ imgSrc, title, price,id }) => {
   const [quantity, setQuantity] = useState(1);
 
   const handleIncrease = () => {
@@ -21,9 +22,15 @@ const Card: React.FC<CardProps> = ({ imgSrc, title, price }) => {
 
   return (
     <div className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
+      <Link
+                key={id}
+                to={`/detail/${id}`}
+                
+              >
       <div className="bg-gray-100 p-4">
         <img className="w-full h-96 object-contain" src={imgSrc} alt={title} />
       </div>
+      </Link>
       <div className="p-4">
         <h3 className="font-serif text-sm">{title}</h3>
         <div className="mt-2 flex items-center">
@@ -55,7 +62,7 @@ const Card: React.FC<CardProps> = ({ imgSrc, title, price }) => {
           </div>
           <button
             type="button"
-            className="focus:outline-none text-white bg-yellow-400 hover:bg-yellow-500 focus:ring-4 focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:focus:ring-yellow-900"
+            className="h-11 w-40 bg-yellow-500 text-white  rounded-lg shadow-lg hover:bg-yellow-600 transition duration-300 ease-in-out"
           >
             Mint Now
           </button>

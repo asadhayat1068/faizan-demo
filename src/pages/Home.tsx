@@ -96,6 +96,7 @@ const Home = () => {
                     imgSrc={product.imageUrl}
                     title={product.name}
                     price={product.price}
+                    id = {product.id}
                   />
                 </div>
               ))}
