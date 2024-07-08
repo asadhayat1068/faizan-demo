@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { fetchToken, fetchCategories, fetchCategoryProducts,fetchHomeProducts } from './services/apiService';
+import { fetchToken, fetchCategories, fetchCategoryProducts, fetchHomeProducts, fetchProductDetails } from './services/apiService';
 
 const APIContext = createContext();
 
@@ -57,9 +57,19 @@ export const APIProvider = ({ children }) => {
     }
   };
 
+  const getProductDetails = async (productId) => {
+    try {
+      const fetchedToken = await fetchToken();
+      setToken(fetchedToken);
+      return await fetchProductDetails(fetchedToken, productId);
+    } catch (error) {
+      console.error('Error fetching product details:', error);
+      throw error;
+    }
+  };
 
   return (
-    <APIContext.Provider value={{ token, categories, getCategoryProducts, getHomeProducts, loading, error }}>
+    <APIContext.Provider value={{ token, categories, getCategoryProducts, getHomeProducts, getProductDetails, loading, error }}>
       {children}
     </APIContext.Provider>
   );

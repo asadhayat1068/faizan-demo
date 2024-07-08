@@ -71,10 +71,11 @@ const Items: React.FC = () => {
             : 'https://via.placeholder.com/400';
           return (
             <Card
-              key={product.id}
+              id={product.id}
               imgSrc={imgSrc}
               title={product.name}
               price={product.price}
+              
             />
           );
         })}
