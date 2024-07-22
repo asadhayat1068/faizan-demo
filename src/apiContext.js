@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { fetchToken, fetchCategories, fetchCategoryProducts, fetchHomeProducts, fetchProductDetails } from './services/apiService';
+import { fetchToken, fetchCategories, fetchCategoryProducts, fetchHomeProducts, fetchProductDetails, sendWalletId } from './services/apiService';
 
 const APIContext = createContext();
 
@@ -67,9 +67,18 @@ export const APIProvider = ({ children }) => {
       throw error;
     }
   };
+  const handleSendWalletId = async (walletId) => {
+    try {
+      const response = await sendWalletId(walletId);
+      return response;
+    } catch (error) {
+      console.error('API call failed', error);
+      throw error;
+    }
+  };
 
   return (
-    <APIContext.Provider value={{ token, categories, getCategoryProducts, getHomeProducts, getProductDetails, loading, error }}>
+    <APIContext.Provider value={{ token, categories, getCategoryProducts, getHomeProducts, getProductDetails,handleSendWalletId, loading, error }}>
       {children}
     </APIContext.Provider>
   );

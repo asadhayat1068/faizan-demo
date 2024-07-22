@@ -1,3 +1,5 @@
+// Header.tsx
+import React from "react";
 import logo from "../../asserts/images/logo.svg";
 import ethimg from "../../asserts/images/Etherium.svg";
 import discord from "../../asserts/images/discord.svg";
@@ -9,6 +11,7 @@ import {
   CURRENCY,
   useCurrencySelector,
 } from "../../providers/CurrencySelector/currencySelectorProvider";
+
 function Header() {
   const { updateCurrency } = useCurrencySelector();
   const handleCurrencyChange = (

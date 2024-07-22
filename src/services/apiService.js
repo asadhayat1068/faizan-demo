@@ -5,7 +5,7 @@ const categoryURL = "https://cryptrovia.com/api/category.php";
 const categoryproducts = "https://cryptrovia.com/api/category_products.php";
 const homeItems = "https://cryptrovia.com/api/homeitems.php";
 const productDetailsURL = "https://cryptrovia.com/api/getproductdetails.php";
-
+const redeemProductURL = "https://cryptrovia.com/api/redeem_product_api.php";
 export const fetchToken = async () => {
   try {
     const cachedToken = localStorage.getItem("token");
@@ -15,6 +15,7 @@ export const fetchToken = async () => {
       const currentTime = new Date().getTime();
       if (currentTime < parseInt(cachedExpiration, 10)) {
         // console.log("Token fetched from local storage:", cachedToken);
+        //console.log('Token fetched from local storage:', cachedToken);
         return cachedToken;
       }
     }
@@ -37,7 +38,6 @@ export const fetchToken = async () => {
     throw error;
   }
 };
-
 
 export const fetchCategories = async (token) => {
   try {
@@ -88,7 +88,6 @@ export const fetchCategoryProducts = async (
   }
 };
 
-
 export const fetchHomeProducts = async (token) => {
   const categoryIds = [3577, 4189, 4188, 3578, 3581, 3582, 3583, 3572, 3579];
   const pageSize = 20; // Number of products per category
@@ -107,22 +106,12 @@ export const fetchHomeProducts = async (token) => {
     };
 
     const response = await axios.post(homeItems, data, { headers });
-    // console.log("service");
-    // console.log("Home Product Response Data: ", response.data);
 
-    // Log items to debug category_ids
-    response.data.categories.forEach((category) => {
-      // console.log(
-      //   `Category ID: ${category.categoryId}, Items: ${category.items.length}`
-      // );
-      category.items.forEach((item) => {
-        // console.log(`Item ID: ${item.id}, Category IDs: ${item.category_ids}`);
-      });
-    });
-
+    console.log(response.data.categories);
     // Structure the response data into the desired format
     const structuredData = response.data.categories.map((category) => ({
       categoryId: category.categoryId,
+      categoryName: category.categoryName,
       products: category.items.map((item) => ({
         id: item.id,
         name: item.name,
@@ -142,7 +131,6 @@ export const fetchHomeProducts = async (token) => {
     return structuredData;
   } catch (error) {
     if (error.response && error.response.status === 401) {
-
       throw new Error("TOKEN_EXPIRED");
     }
     throw error;
@@ -164,7 +152,6 @@ export const fetchProductDetails = async (token, productId) => {
     return response.data.items[0];
   } catch (error) {
     if (error.response && error.response.status === 401) {
-
       throw new Error("TOKEN_EXPIRED");
     }
     throw error;
@@ -201,4 +188,16 @@ export const getMintPriceAndSignature = async (
     }
     throw error;
   }
+};
+export const sendWalletId = async (walletId) => {
+  console.log(walletId);
+  const response = await axios.post(redeemProductURL, null, {
+    headers: {
+      Authorization: `${walletId}`,
+      "Content-Type": "application/json",
+    },
+  });
+  console.log("wallet api");
+  console.log(response);
+  return response.data;
 };
