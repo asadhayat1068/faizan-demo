@@ -12,30 +12,26 @@ interface Product {
   price_usd: number;
   imageUrl: string;
   sku: string;
+  usd: number;
 }
 
 interface Category {
   categoryId: number;
   categoryName: string;
   products: Product[];
-}
-
-interface HomeProductsProps {
-  categories: Category[];
+  conversionRate: number;
 }
 
 const Home = () => {
   const { getHomeProducts } = useAPI();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(24);
 
-  // Reference for the horizontal scroll container
   const scrollRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  // Function to scroll left
   const scrollLeft = (index: number) => {
     scrollRefs.current[index]?.scrollBy({
       left: -200, // Adjust the scroll amount as needed
@@ -43,7 +39,6 @@ const Home = () => {
     });
   };
 
-  // Function to scroll right
   const scrollRight = (index: number) => {
     scrollRefs.current[index]?.scrollBy({
       left: 200, // Adjust the scroll amount as needed
@@ -56,11 +51,14 @@ const Home = () => {
       try {
         setLoading(true);
         const structuredData = await getHomeProducts(pageSize, currentPage);
-
         setCategories(structuredData);
-        setLoading(false);
       } catch (error) {
-        setError(error as Error);
+        if (error instanceof Error) {
+          setError(error.message);
+        } else {
+          setError("An unexpected error occurred");
+        }
+      } finally {
         setLoading(false);
       }
     };
@@ -69,7 +67,8 @@ const Home = () => {
   }, [getHomeProducts, pageSize, currentPage]);
 
   if (loading) return <Spinner />;
-  if (error) return <div>Error: {error.message}</div>;
+  if (error) return <div>Error: {error}</div>;
+
   return (
     <div className="max-w-[1176px] w-full flex flex-col items-center-center mx-auto aos-init aos-animate mt-5 mainbanner">
       <img src={banner} alt="cryptrovia" />

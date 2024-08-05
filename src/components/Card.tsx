@@ -54,6 +54,7 @@ const Card: React.FC<CardProps> = ({
             </span>
           )}
         </div>
+
         <div className="mt-4 flex items-center justify-between">
           <div className="flex items-center">
             <button

@@ -264,6 +264,9 @@ table {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+input[type="range"].range-input {
+  accent-color: #c27803; /* Use the desired color */
+}
 button,
 input,
 optgroup,
@@ -1032,7 +1035,9 @@ video {
 .w-screen {
   width: 100vw;
 }
-
+.w-svw{
+  width: 100dvw;
+}
 .min-w-\[11rem\] {
   min-width: 11rem;
 }

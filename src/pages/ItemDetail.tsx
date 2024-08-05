@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useAPI } from "../apiContext";
 import { useParams } from "react-router-dom";
@@ -7,15 +6,24 @@ import Spinner from "../components/Spinner";
 import Seperator from "../asserts/images/Seperator.svg";
 import { Link } from "react-router-dom";
 import MintButton from "../components/MintButton";
+
+interface CustomAttribute {
+  attribute_code: string;
+  value: string; // Ensure value is a string, or use any if it can vary
+}
+
 interface ProductDetails {
   id: number;
   sku: string;
   name: string;
   description: string;
   price: number;
+  price_usd: number;
+  price_eth: number;
+  conversionRate: number;
   imageUrl: string;
-  custom_attributes: Array<{ attribute_code: string, value: any }>;
-  [key: string]: any; // for other attributes
+  custom_attributes?: CustomAttribute[];
+  media_gallery_entries?: Array<{ file: string }>;
 }
 
 const ItemDetail: React.FC = () => {
@@ -24,21 +32,25 @@ const ItemDetail: React.FC = () => {
   const [product, setProduct] = useState<ProductDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [quantity, setQuantity] = useState(1); // Default quantity
+  const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     const fetchProduct = async () => {
       setLoading(true);
       setError(null);
       try {
-        const productDetails = await getProductDetails(productId);
-        setProduct({
-          ...productDetails,
-          imageUrl: productDetails.media_gallery_entries?.[0]?.file
-            ? `https://cryptrovia.com/pub/media/catalog/product${productDetails.media_gallery_entries[0].file}`
-            : "https://via.placeholder.com/400",
-        });
+        const productDetails = await getProductDetails(Number(productId));
+
+        if (productDetails) {
+          setProduct({
+            ...productDetails,
+            imageUrl: productDetails.media_gallery_entries?.[0]?.file
+              ? `https://cryptrovia.com/pub/media/catalog/product${productDetails.media_gallery_entries[0].file}`
+              : "https://via.placeholder.com/400",
+          });
+        }
       } catch (err) {
+        console.error("Error fetching product details:", err);
         setError("Failed to fetch product details");
       } finally {
         setLoading(false);
@@ -55,8 +67,9 @@ const ItemDetail: React.FC = () => {
   };
 
   const handleMintNowClick = () => {
-    // Implement buy now logic
-    alert(`Minting ${quantity} ${product?.name}(s)!`);
+    if (product) {
+      alert(`Minting ${quantity} ${product.name}(s)!`);
+    }
   };
 
   const stripHtmlTags = (html: string) => {
@@ -64,54 +77,37 @@ const ItemDetail: React.FC = () => {
     return doc.body.textContent || "";
   };
 
-  if (loading) {
-    return <Spinner />;
-  }
-
-  if (error) {
+  if (loading) return <Spinner />;
+  if (error)
     return (
-      <div className="container mx-auto px-4 py-8 text-center">{error}</div>
+      <div className="container mx-auto px-4 py-8 text-center text-red-500">
+        {error}
+      </div>
     );
-  }
-
-  if (!product) {
+  if (!product)
     return (
       <div className="container mx-auto px-4 py-8 text-center">
         Product not found
       </div>
     );
-  }
 
-  const attributesMap: Record<string, string> = {
-    short_description: "Short Description",
-    image: "Image",
-    url_key: "URL Key",
-    page_layout: "Page Layout",
-    small_image: "Small Image",
-    description: "Description",
-    thumbnail: "Thumbnail",
-    cost: "Cost",
-    shippingcost: "Shipping Cost",
-    usd: "USD",
-    msrp: "MSRP",
-    tax_class_id: "Tax Class ID",
-    category_ids: "Category IDs",
-    required_options: "Required Options",
-    has_options: "Has Options",
-    length: "Length",
-    width: "Width",
-    height: "Height",
-    brand: "Brand",
-  };
-
-  const customAttributes = product.custom_attributes.reduce(
+  const customAttributes = (product.custom_attributes || []).reduce(
     (acc: Record<string, any>, attr) => {
-      acc[attr.attribute_code] = attr.value;
+      const code = String(attr.attribute_code);
+      const value = String(attr.value);
+
+      if (code && value) {
+        acc[code] = value;
+      }
       return acc;
     },
-    {}
+    {} as Record<string, any>
   );
-
+  console.log(product.conversionRate);
+  const ethPrice =
+    product.conversionRate > 0
+      ? (customAttributes["usd"] / product.conversionRate).toFixed(4)
+      : 0;
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row gap-8">
@@ -128,33 +124,34 @@ const ItemDetail: React.FC = () => {
           </h1>
           <div className="text-gray-500 font-sans flex flex-row space-x-4 mb-1">
             <div>By Cryptovia</div>
-            <img src={Seperator} />
+            <img src={Seperator} alt="separator" />
             <div>
               <Link
-                key="opensea"
                 to={`https://opensea.io/collection/cryptrovia`}
+                className="text-blue-600 hover:underline"
               >
                 Visit OpenSea store
               </Link>
             </div>
-            <img src={Seperator} />
+            <img src={Seperator} alt="separator" />
             <div>
               <span className="font-bold">Sku:</span> {product.sku}
             </div>
           </div>
           <div className="mt-2 flex items-center">
-            <img src={eth} alt="eth" className="w-5 h-5" />
-            <span className="text-green-700">{product.price}</span>
-            <span className="pl-2">{"/"}</span>
+            <img src={eth} alt="Ethereum" className="w-5 h-5" />
+            <span className="text-green-700">{ethPrice}</span>
+            <span className="pl-2">/</span>
             <span className="text-red-700 pl-2">
-              ${customAttributes["usd"]}
+              ${customAttributes["usd"] || "N/A"}
             </span>
           </div>
 
           <div className="flex items-center mt-4">
             <button
-              className="bg-gray-300 text-gray-700 px-4 py-2"
+              className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
               onClick={() => handleQuantityChange(quantity - 1)}
+              disabled={quantity <= 1}
             >
               -
             </button>
@@ -165,7 +162,7 @@ const ItemDetail: React.FC = () => {
               readOnly
             />
             <button
-              className="bg-gray-300 text-gray-700 px-4 py-2"
+              className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
               onClick={() => handleQuantityChange(quantity + 1)}
             >
               +
@@ -222,11 +219,11 @@ const ItemDetail: React.FC = () => {
               </div>
             )}
           </div>
-          <div className="my-4 border-t border-gray-300 "></div>
+
+          <div className="my-4 border-t border-gray-300"></div>
 
           {customAttributes["description"] && (
             <div className="mb-2 font-sans">
-
               <span className="text-gray-600">
                 {stripHtmlTags(customAttributes["description"])}
               </span>
