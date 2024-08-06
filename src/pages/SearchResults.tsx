@@ -14,8 +14,8 @@ type CustomAttribute = {
 type Product = {
   id: number;
   name: string;
-  price: number;
-  usd: number;
+  price_eth: number;
+  price_usd: number;
   custom_attributes: CustomAttribute[];
   media_gallery_entries: { file: string }[];
   conversionRate:number;
@@ -97,10 +97,9 @@ console.log(searchResults);
                   id={product.id}
                   imgSrc={imgSrc}
                   title={product.name}
-                  price={product.price}
+                  price_eth={product.price_eth}
                   key={product.id}
-                  conversionRate={product.conversionRate}
-                  usd={usdValue}
+                  price_usd={product.price_usd}
                 />
               );
             })}

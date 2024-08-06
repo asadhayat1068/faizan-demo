@@ -1,5 +1,4 @@
 // Card.tsx
-
 import React, { useState } from "react";
 import eth from "../asserts/images/Etherium.svg";
 import { Link } from "react-router-dom";
@@ -54,7 +53,6 @@ const Card: React.FC<CardProps> = ({
             </span>
           )}
         </div>
-
         <div className="mt-4 flex items-center justify-between">
           <div className="flex items-center">
             <button

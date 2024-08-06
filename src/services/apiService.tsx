@@ -34,7 +34,8 @@ interface ProductDetails {
   name: string;
   sku:string;
   description: string;
-  price: number;
+  price_eth: number;
+  price_usd: number;
   imageUrl: string;
   custom_attributes: CustomAttribute[];
   conversionRate:number;
@@ -132,7 +133,7 @@ const fetchCategoryProducts = async (token: string, categoryId: number, pageSize
     };
 
     const response = await axios.post(categoryproducts, data, { headers });
-   // console.log(response.data);
+   console.log(response.data);
     return response.data;
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
@@ -177,6 +178,8 @@ const fetchHomeProducts = async (token: string, pageSize: number, currentPage: n
       products: category.items.map((item: any) => ({
         id: item.id,
         name: item.name,
+        price_eth: item.price_eth,
+        price_usd: item.price_usd,
         description: item.custom_attributes.find((attr: any) => attr.attribute_code === 'description')?.value || '',
         usd: item.custom_attributes.find((attr: any) => attr.attribute_code === 'usd')?.value || '',
         price: item.price,
@@ -212,7 +215,8 @@ const fetchProductDetails = async (token: string, productId: number): Promise<Pr
       name: item.name,
       sku:item.sku,
       description: item.custom_attributes.find((attr: CustomAttribute) => attr.attribute_code === 'description')?.value || '',
-      price: item.price,
+      price_eth: item.price_eth,
+      price_usd: item.price_usd,
       conversionRate:response.data.conversion_rate,
       custom_attributes: item.custom_attributes,
       media_gallery_entries: item.media_gallery_entries,
