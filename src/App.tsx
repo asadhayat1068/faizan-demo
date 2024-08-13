@@ -9,24 +9,24 @@ import { defaultConfig, queryClient } from "./wallet";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { CurrencySelectorProvider } from "./providers/CurrencySelector/currencySelectorProvider";
-import { APIProvider } from './apiContext';
+import { APIProvider } from "./apiContext";
 function App() {
   return (
     <div className="page-wrapper">
       <WagmiProvider config={defaultConfig}>
         <QueryClientProvider client={queryClient}>
-          <RainbowKitProvider>
+          <RainbowKitProvider modalSize="compact">
             <CurrencySelectorProvider>
-            <APIProvider>
-              <div id="header">
-                <Header />
-              </div>
-              <div id="main" className="min-h-screen">
-                <Outlet />
-              </div>
-              <div id="footer">
-                <Footer />
-              </div>
+              <APIProvider>
+                <div id="header">
+                  <Header />
+                </div>
+                <div id="main" className="min-h-screen">
+                  <Outlet />
+                </div>
+                <div id="footer">
+                  <Footer />
+                </div>
               </APIProvider>
             </CurrencySelectorProvider>
           </RainbowKitProvider>
