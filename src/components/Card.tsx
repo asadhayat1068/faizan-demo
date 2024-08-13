@@ -1,15 +1,26 @@
 // Card.tsx
-import React, { useState } from 'react';
-import eth from '../asserts/images/Etherium.svg';
+import React, { useState } from "react";
+import eth from "../asserts/images/Etherium.svg";
 import { Link } from "react-router-dom";
+import MintButton from "./MintButton";
+import { ethers } from "ethers";
 type CardProps = {
   imgSrc: string;
   title: string;
-  price: number;
-  id:number;
+  price_eth: number;
+  price_usd: number;
+  id: number;
+  sku: string;
 };
 
-const Card: React.FC<CardProps> = ({ imgSrc, title, price,id }) => {
+const Card: React.FC<CardProps> = ({
+  imgSrc,
+  title,
+  price_eth,
+  price_usd,
+  id,
+  sku,
+}) => {
   const [quantity, setQuantity] = useState(1);
 
   const handleIncrease = () => {
@@ -22,20 +33,25 @@ const Card: React.FC<CardProps> = ({ imgSrc, title, price,id }) => {
 
   return (
     <div className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
-      <Link
-                key={id}
-                to={`/detail/${id}`}
-                
-              >
-      <div className="bg-gray-100 p-4">
-        <img className="w-full h-96 object-contain" src={imgSrc} alt={title} />
-      </div>
+      <Link key={id} to={`/detail/${id}`}>
+        <div className="bg-gray-100 p-4">
+          <img
+            className="w-full h-96 object-contain"
+            src={imgSrc}
+            alt={title}
+          />
+        </div>
       </Link>
       <div className="p-4">
         <h3 className="font-serif text-sm">{title}</h3>
         <div className="mt-2 flex items-center">
           <img src={eth} alt="eth" className="w-5 h-5 mr-1" />
-          <span>{price}</span>
+          <span>{price_eth.toString()}</span>
+          {price_usd && (
+            <span className="text-sm text-gray-500 ml-1">
+              ( &#8773; ${price_usd.toString()})
+            </span>
+          )}
         </div>
         <div className="mt-4 flex items-center justify-between">
           <div className="flex items-center">
@@ -60,12 +76,12 @@ const Card: React.FC<CardProps> = ({ imgSrc, title, price,id }) => {
               +
             </button>
           </div>
-          <button
-            type="button"
-            className="h-11 w-40 bg-yellow-500 text-white  rounded-lg shadow-lg hover:bg-yellow-600 transition duration-300 ease-in-out"
-          >
-            Mint Now
-          </button>
+          <MintButton
+            sku={sku}
+            quantity={quantity}
+            price_eth={price_eth}
+            price_usd={price_usd}
+          />
         </div>
       </div>
     </div>

@@ -4,7 +4,7 @@ import discord from "../../asserts/images/discord.svg";
 import opensea from "../../asserts/images/opensea.svg";
 import { Link } from "react-router-dom";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import CategoryMenu from './CategoryMenu';
+import CategoryMenu from "./CategoryMenu";
 import {
   CURRENCY,
   useCurrencySelector,
@@ -57,14 +57,17 @@ function Header() {
           <Link to="/">Drops</Link>
         </ul>
         <div className="flex items-center space-x-8 walletblock">
-          <ConnectButton />
+          <ConnectButton
+            showBalance={{
+              smallScreen: true,
+              largeScreen: true,
+            }}
+          />
         </div>
       </nav>
-      <div> 
-     
-      <CategoryMenu />
-   
-    </div>
+      <div>
+        <CategoryMenu />
+      </div>
     </header>
   );
 }
