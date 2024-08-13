@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useAPI } from "../apiContext";
 import { useParams } from "react-router-dom";
@@ -13,7 +14,7 @@ interface ProductDetails {
   description: string;
   price: number;
   imageUrl: string;
-  custom_attributes: Array<{ attribute_code: string; value: any }>;
+  custom_attributes: Array<{ attribute_code: string, value: any }>;
   [key: string]: any; // for other attributes
 }
 
@@ -37,7 +38,6 @@ const ItemDetail: React.FC = () => {
             ? `https://cryptrovia.com/pub/media/catalog/product${productDetails.media_gallery_entries[0].file}`
             : "https://via.placeholder.com/400",
         });
-        console.log({ productDetails });
       } catch (err) {
         setError("Failed to fetch product details");
       } finally {
@@ -170,11 +170,13 @@ const ItemDetail: React.FC = () => {
             >
               +
             </button>
+
             {/* <button
               className="ml-2 h-11 w-32 bg-yellow-500 text-white rounded-lg shadow-lg hover:bg-yellow-600 transition duration-300 ease-in-out"
               onClick={handleMintNowClick}
             >
               Mint Now
+
             </button> */}
             <span className="ml-2">
               <MintButton
@@ -220,11 +222,11 @@ const ItemDetail: React.FC = () => {
               </div>
             )}
           </div>
-
           <div className="my-4 border-t border-gray-300 "></div>
 
           {customAttributes["description"] && (
             <div className="mb-2 font-sans">
+
               <span className="text-gray-600">
                 {stripHtmlTags(customAttributes["description"])}
               </span>

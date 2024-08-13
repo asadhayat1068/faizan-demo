@@ -1,4 +1,5 @@
 // Card.tsx
+
 import React, { useState } from "react";
 import eth from "../asserts/images/Etherium.svg";
 import { Link } from "react-router-dom";

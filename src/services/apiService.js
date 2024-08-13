@@ -38,6 +38,7 @@ export const fetchToken = async () => {
   }
 };
 
+
 export const fetchCategories = async (token) => {
   try {
     const headers = {
@@ -77,7 +78,6 @@ export const fetchCategoryProducts = async (
     };
 
     const response = await axios.post(categoryproducts, data, { headers });
-
     return response.data;
   } catch (error) {
     if (error.response && error.response.status === 401) {
@@ -87,6 +87,7 @@ export const fetchCategoryProducts = async (
     throw error;
   }
 };
+
 
 export const fetchHomeProducts = async (token) => {
   const categoryIds = [3577, 4189, 4188, 3578, 3581, 3582, 3583, 3572, 3579];
@@ -141,6 +142,7 @@ export const fetchHomeProducts = async (token) => {
     return structuredData;
   } catch (error) {
     if (error.response && error.response.status === 401) {
+
       throw new Error("TOKEN_EXPIRED");
     }
     throw error;
@@ -162,6 +164,7 @@ export const fetchProductDetails = async (token, productId) => {
     return response.data.items[0];
   } catch (error) {
     if (error.response && error.response.status === 401) {
+
       throw new Error("TOKEN_EXPIRED");
     }
     throw error;
