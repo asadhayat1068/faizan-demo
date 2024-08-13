@@ -87,19 +87,21 @@ const MintModal = ({
   }, []);
 
   const mintWithETH = async () => {
-    // Step 1
-    const metaData = await getMetadata(0, walletAddress, paymentToken, sku);
+    try {
+      // Step 1
+      const metaData = await getMetadata(0, walletAddress, paymentToken, sku);
 
-    // Step 2
-    await processMintWithETH(
-      1,
-      walletAddress,
-      metaData.price,
-      quantity,
-      metaData.sku,
-      metaData.signature,
-      metaData.timestamp
-    );
+      // Step 2
+      await processMintWithETH(
+        1,
+        walletAddress,
+        metaData.price,
+        quantity,
+        metaData.sku,
+        metaData.signature,
+        metaData.timestamp
+      );
+    } catch (error) {}
   };
 
   const getMetadata = async (
@@ -139,7 +141,6 @@ const MintModal = ({
           ...newSteps[_stepNumber],
           state: LoadingState.FAILED,
         };
-        newSteps[1] = { ...newSteps[1], state: LoadingState.IN_PROGRESS };
         return newSteps;
       });
       setErrorMessage("An error occurred while fetching metadata");

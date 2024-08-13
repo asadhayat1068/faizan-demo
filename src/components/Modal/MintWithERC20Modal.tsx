@@ -89,6 +89,7 @@ const MintWithERC20Modal = ({
   const config = useConfig();
 
   useEffect(() => {
+    ReactModal.setAppElement("body");
     setTxHash(null);
   }, []);
 
@@ -167,7 +168,6 @@ const MintWithERC20Modal = ({
           ...newSteps[_stepNumber],
           state: LoadingState.FAILED,
         };
-        newSteps[1] = { ...newSteps[1], state: LoadingState.IN_PROGRESS };
         return newSteps;
       });
       setErrorMessage("An error occurred while fetching metadata");
@@ -212,7 +212,7 @@ const MintWithERC20Modal = ({
       });
       setErrorMessage("Insufficient balance");
       setTxCompleted(true);
-      // throw new Error("Error: Insufficient balance");
+      throw new Error("Error: Insufficient balance");
     }
     setSteps((steps_) => {
       const newSteps = steps_.slice();
