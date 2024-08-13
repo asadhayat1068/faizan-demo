@@ -1,5 +1,5 @@
 import React, { PropsWithChildren, useContext } from "react";
-import { zeroAddress } from "viem";
+import { Address, zeroAddress } from "viem";
 
 export enum CURRENCY {
   ETH = "ETH",
@@ -9,7 +9,7 @@ export enum CURRENCY {
 
 export type Currency = {
   symbol: CURRENCY;
-  address: string;
+  address: Address;
   decimals: number;
   networkId: number;
 };

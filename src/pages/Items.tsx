@@ -1,14 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { useAPI } from '../apiContext';
-import Card from '../components/Card';
-import Spinner from '../components/Spinner'; // Import Spinner component
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { useAPI } from "../apiContext";
+import Card from "../components/Card";
+import Spinner from "../components/Spinner"; // Import Spinner component
+import { BigNumber } from "ethers";
 
 interface Product {
   media_gallery_entries: { file: string }[];
   name: string;
-  price: number;
+  price_eth: number;
+  price_usd: number;
   id: number;
+  sku: string;
 }
 
 const Items: React.FC = () => {
@@ -25,7 +28,8 @@ const Items: React.FC = () => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const { items: fetchedProducts, total_count: totalCount } = await getCategoryProducts(categoryId, pageSize, currentPage);
+        const { items: fetchedProducts, total_count: totalCount } =
+          await getCategoryProducts(categoryId, pageSize, currentPage);
         setProducts(fetchedProducts);
         setTotalCount(totalCount);
         setLoading(false);
@@ -68,14 +72,15 @@ const Items: React.FC = () => {
         {products.map((product) => {
           const imgSrc = product.media_gallery_entries?.[0]?.file
             ? `https://cryptrovia.com/pub/media/catalog/product${product.media_gallery_entries[0].file}`
-            : 'https://via.placeholder.com/400';
+            : "https://via.placeholder.com/400";
           return (
             <Card
               id={product.id}
               imgSrc={imgSrc}
               title={product.name}
-              price={product.price}
-              
+              price_eth={product.price_eth}
+              price_usd={product.price_usd}
+              sku={product.sku}
             />
           );
         })}
@@ -88,12 +93,17 @@ const Items: React.FC = () => {
         >
           Previous
         </button>
-        {Array.from({ length: endPage - startPage + 1 }, (_, index) => startPage + index).map((page) => (
+        {Array.from(
+          { length: endPage - startPage + 1 },
+          (_, index) => startPage + index
+        ).map((page) => (
           <button
             key={page}
             onClick={() => handlePageChange(page)}
             className={`px-3 py-1 rounded-md ${
-              currentPage === page ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-700'
+              currentPage === page
+                ? "bg-blue-500 text-white"
+                : "bg-gray-300 text-gray-700"
             }`}
           >
             {page}
