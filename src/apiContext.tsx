@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { fetchToken, fetchCategories, fetchCategoryProducts, fetchHomeProducts, fetchProductDetails, sendWalletId, searchProducts } from './services/apiService';
+import { fetchToken, fetchCategories, fetchCategoryProducts, fetchHomeProducts, fetchProductDetails, sendWalletId, searchProducts,addUser } from './services/apiService';
 
 // Define the types for your API context
 type APIContextType = {
@@ -13,6 +13,7 @@ type APIContextType = {
   searchResults: any[];
   loading: boolean;
   error: Error | null;
+  handleAddUser: (firstName: string, lastName: string,email: string,walletAddress:string) => Promise<any>;
 };
 type CustomAttribute = {
   attribute_code: string;
@@ -128,9 +129,17 @@ export const APIProvider: React.FC<APIProviderProps> = ({ children }) => {
       setLoading(false);
     }
   };
-
+  const handleAddUser = async (firstName: string, lastName: string, email: string, walletAddress:string) => {
+    const token = await fetchToken();
+    try {
+      return await addUser(firstName, lastName, email,walletAddress, token);
+    } catch (error) {
+      console.error('Error adding user:', error);
+      throw error;
+    }
+  };
   return (
-    <APIContext.Provider value={{ token, categories, getCategoryProducts, getHomeProducts, getProductDetails, handleSendWalletId, performSearch, searchResults, loading, error }}>
+    <APIContext.Provider value={{ token, categories, getCategoryProducts, getHomeProducts, getProductDetails, handleSendWalletId, performSearch, searchResults, loading, error, handleAddUser }}>
       {children}
     </APIContext.Provider>
   );

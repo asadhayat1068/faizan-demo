@@ -13,7 +13,7 @@ import { useConfig } from "wagmi";
 import { CryptroviaABI, CryptroviaAddress } from "../../providers/Contract/abi";
 import { BigNumber } from "ethers";
 import { useEffect, useState } from "react";
-import { getMintPriceAndSignature } from "../../services/apiService";
+import { getMintPriceAndSignature,fetchToken } from "../../services/apiService";
 import {
   getTransactionConfirmations,
   readContract,
@@ -146,8 +146,9 @@ const MintWithERC20Modal = ({
       return newSteps;
     });
     try {
+      const token = await fetchToken();
       const metaData = await getMintPriceAndSignature(
-        "",
+        token,
         _walletAddress,
         _paymentToken,
         _sku

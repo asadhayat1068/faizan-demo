@@ -146,10 +146,10 @@ const ItemDetail: React.FC = () => {
           </div>
           <div className="mt-2 flex items-center">
             <img src={eth} alt="eth" className="w-5 h-5" />
-            <span className="text-green-700">{product.price}</span>
+            <span className="text-green-700">{product.price_eth}</span>
             <span className="pl-2">{"/"}</span>
             <span className="text-red-700 pl-2">
-              ${customAttributes["usd"]}
+            ( &#8773; ${product.price_usd.toString()})
             </span>
           </div>
 

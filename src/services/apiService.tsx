@@ -48,6 +48,7 @@ const homeItems = "https://cryptrovia.com/api/homeitems.php";
 const productDetailsURL = "https://cryptrovia.com/api/getproductdetails.php";
 const redeemProductURL = "https://cryptrovia.com/api/redeem_product_api.php";
 const searchUrl = "https://cryptrovia.com/api/itmsearch.php";
+const AddUserUrl = "https://cryptrovia.com/api/adduser.php";
 
 const fetchToken = async (): Promise<string> => {
   try {
@@ -335,6 +336,44 @@ export const getMintPriceAndSignature = async (
   }
 };
 
+const addUser = async (
+  firstName: string,
+  lastName: string,
+  email: string,
+  walletAddress:string,
+  token: string,
+): Promise<any> => {
+  try {
+    const data = {
+      firstName,
+      lastName,
+      email,
+      walletAddress
+    };
+
+    const response = await axios.post(AddUserUrl, data, {
+      headers: {
+        Authorization: `${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      console.error(
+        "Error adding user:",
+        error.response ? error.response.data : error.message
+      );
+    } else {
+      console.error("Error adding user:", error);
+    }
+    throw error;
+  }
+};
+
+
+
 export {
   searchProducts,
   fetchToken,
@@ -343,4 +382,5 @@ export {
   fetchHomeProducts,
   fetchProductDetails,
   sendWalletId,
+  addUser
 };
