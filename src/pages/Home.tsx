@@ -56,7 +56,6 @@ const Home = () => {
       try {
         setLoading(true);
         const structuredData = await getHomeProducts(pageSize, currentPage);
-
         setCategories(structuredData);
         setLoading(false);
       } catch (error) {

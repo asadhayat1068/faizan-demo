@@ -174,7 +174,7 @@ const fetchHomeProducts = async (
     };
     //console.log(token);
     const response = await axios.post(homeItems, data, { headers });
-
+    
     // Ensure response data is in expected format
     if (!response.data || !Array.isArray(response.data.categories)) {
       throw new Error("Invalid data structure");
@@ -188,6 +188,7 @@ const fetchHomeProducts = async (
         products: category.items.map((item: any) => ({
           id: item.id,
           name: item.name,
+          sku: item.sku,
           price_eth: item.price_eth,
           price_usd: item.price_usd,
           description:
