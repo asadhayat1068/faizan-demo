@@ -1,4 +1,4 @@
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 
 // Define types for responses
 interface TokenResponse {
@@ -13,16 +13,17 @@ interface CustomAttribute {
 interface Category {
   categoryId: number;
   categoryName: string;
-  items: Product[];
+  items: itemSelected[];
 }
 
-interface Product {
+interface itemSelected {
   id: number;
   name: string;
   price: number;
-  media_gallery_entries: Array<{ file: string }>;
-  custom_attributes: CustomAttribute[];
+  quantity: number;
+  productImageUrl: string;
 }
+
 
 interface HomeProductsResponse {
   categories: Category[];
@@ -49,48 +50,37 @@ const productDetailsURL = "https://cryptrovia.com/api/getproductdetails.php";
 const redeemProductURL = "https://cryptrovia.com/api/redeem_product_api.php";
 const searchUrl = "https://cryptrovia.com/api/itmsearch.php";
 const AddUserUrl = "https://cryptrovia.com/api/adduser.php";
+const checkoutProductURL = "https://cryptrovia.com/api/createorder.php";
 
 const fetchToken = async (): Promise<string> => {
   try {
     const cachedToken = localStorage.getItem("token");
     const cachedExpiration = localStorage.getItem("tokenExpiration");
 
-    // Check if the cached token is still valid
     if (cachedToken && cachedExpiration) {
       const currentTime = new Date().getTime();
       if (currentTime < parseInt(cachedExpiration, 10)) {
-        //console.log('Returning cached token');
         return cachedToken;
       }
     }
 
-    // Fetch new token from the server
     const response = await axios.get<string>(tokenURL);
-    console.log(response);
     const token: string = response.data;
 
     if (!token || typeof token !== "string") {
-      throw new Error(
-        "Token received from server is null, undefined, or not a string"
-      );
+      throw new Error("Token received from server is null, undefined, or not a string");
     }
 
-    // Calculate token expiration time
-    const TOKEN_EXPIRATION_TIME = 3 * 60 * 60 + 50 * 60; // Example: 3 hours 50 minutes
+    const TOKEN_EXPIRATION_TIME = 3 * 60 * 60 + 50 * 60;
     const expirationTime = new Date().getTime() + TOKEN_EXPIRATION_TIME * 1000;
 
-    // Store new token and expiration time in local storage
     localStorage.setItem("token", token);
     localStorage.setItem("tokenExpiration", expirationTime.toString());
 
-    //console.log('Fetched and stored new token:', token);
     return token;
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
-      console.error(
-        "Error fetching token:",
-        error.response ? error.response.data : error.message
-      );
+      console.error("Error fetching token:", error.response ? error.response.data : error.message);
     } else {
       console.error("Error fetching token:", error);
     }
@@ -138,7 +128,6 @@ const fetchCategoryProducts = async (
     };
 
     const response = await axios.post(categoryproducts, data, { headers });
-    console.log(response.data);
     return response.data;
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
@@ -214,6 +203,7 @@ const fetchHomeProducts = async (
   }
 };
 
+
 const fetchProductDetails = async (
   token: string,
   productId: number
@@ -235,10 +225,9 @@ const fetchProductDetails = async (
       id: item.id,
       name: item.name,
       sku: item.sku,
-      description:
-        item.custom_attributes.find(
-          (attr: CustomAttribute) => attr.attribute_code === "description"
-        )?.value || "",
+      description: item.custom_attributes.find(
+        (attr: CustomAttribute) => attr.attribute_code === "description"
+      )?.value || "",
       price_eth: item.price_eth,
       price_usd: item.price_usd,
       conversionRate: response.data.conversion_rate,
@@ -297,7 +286,6 @@ const searchProducts = async (
         },
       }
     );
-    console.log(response.data);
     return response.data;
   } catch (error: unknown) {
     console.error("Error searching products:", error);
@@ -305,7 +293,7 @@ const searchProducts = async (
   }
 };
 
-export const getMintPriceAndSignature = async (
+const getMintPriceAndSignature = async (
   token: string,
   walletAddress: string,
   paymentToken: string,
@@ -341,8 +329,8 @@ const addUser = async (
   firstName: string,
   lastName: string,
   email: string,
-  walletAddress:string,
-  token: string,
+  walletAddress: string,
+  token: string
 ): Promise<any> => {
   try {
     const data = {
@@ -360,15 +348,40 @@ const addUser = async (
     });
 
     return response.data;
-  } catch (error: unknown) {
-    if (axios.isAxiosError(error)) {
-      console.error(
-        "Error adding user:",
-        error.response ? error.response.data : error.message
-      );
-    } else {
-      console.error("Error adding user:", error);
-    }
+  } catch (error) {
+    console.error("Error adding user:", error);
+    throw error;
+  }
+};
+
+const createNewOrder = async (
+  token: string,
+  userwalletId: string, // Ensure wallet ID is passed as a string
+  selectedProducts: itemSelected[], // Pass selected products as an array of itemSelected
+  shippingDetails: any, // Shipping details object
+  billingDetails: any // Billing details object
+) => {
+  try {
+    // Prepare the order data payload
+    const orderData = {
+      walletId: userwalletId, // Include wallet ID
+      products: selectedProducts, // Selected products
+      shipping: shippingDetails, // Shipping details
+      billing: billingDetails // Billing details
+    };
+
+    // Make the POST request using axios
+    const response = await axios.post(checkoutProductURL, orderData, {
+      headers: {
+        Authorization: `Bearer ${token}`, // Include Bearer token in headers
+        'Content-Type': 'application/json' // Ensure the content type is JSON
+      },
+    });
+
+    // Return the response data
+    return response.data;
+  } catch (error) {
+    console.error('Error creating new order:', error);
     throw error;
   }
 };
@@ -376,12 +389,14 @@ const addUser = async (
 
 
 export {
-  searchProducts,
   fetchToken,
   fetchCategories,
   fetchCategoryProducts,
   fetchHomeProducts,
   fetchProductDetails,
   sendWalletId,
-  addUser
+  searchProducts,
+  getMintPriceAndSignature,
+  addUser,
+  createNewOrder, type itemSelected,
 };

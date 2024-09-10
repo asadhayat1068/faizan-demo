@@ -7,6 +7,8 @@ import Contact from "../pages/Contact";
 import Items from "../pages/Items";
 import ItemDetail from "../pages/ItemDetail";
 import SearchResults from "../pages/SearchResults";
+import CheckOut from '../pages/Checkout';
+import Success from "../pages/Success";
 import App from "../App";
 
 export const hashRouter = createHashRouter([
@@ -42,6 +44,14 @@ export const hashRouter = createHashRouter([
       {
         path: "/search",
         element: <SearchResults />,
+      },
+      {
+        path: "/checkout",
+        element: <CheckOut />,
+      },
+      {
+        path: "/success",
+        element: <Success />,
       },
     ],
   },

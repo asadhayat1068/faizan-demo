@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { fetchToken, fetchCategories, fetchCategoryProducts, fetchHomeProducts, fetchProductDetails, sendWalletId, searchProducts,addUser } from './services/apiService';
+import { fetchToken, fetchCategories, fetchCategoryProducts, fetchHomeProducts, fetchProductDetails, sendWalletId, searchProducts, addUser, createNewOrder } from './services/apiService';
+import { itemSelected } from './services/apiService'; // Import the itemSelected type
 
 // Define the types for your API context
 type APIContextType = {
@@ -13,8 +14,16 @@ type APIContextType = {
   searchResults: any[];
   loading: boolean;
   error: Error | null;
-  handleAddUser: (firstName: string, lastName: string,email: string,walletAddress:string) => Promise<any>;
+  handleAddUser: (firstName: string, lastName: string, email: string, walletAddress: string) => Promise<any>;
+  createOrder: (
+    walletId: string,
+    selectedProducts: itemSelected[], // Use itemSelected type
+    shippingDetails: any,
+    billingDetails: any
+  ) => Promise<any>;
 };
+
+// Define the types for product and product details
 type CustomAttribute = {
   attribute_code: string;
   value: string | number;
@@ -29,8 +38,18 @@ type Product = {
   conversionRate?: number; // Optional, as it may not always be present initially
 };
 
+type ProductDetails = {
+  id: string;
+  name: string;
+  sku: string;
+  description: string;
+  price_eth: number;
+  price_usd: number;
+  productImageUrl: string;
+};
+
 // Create a context with a default value of undefined
-const APIContext = createContext<APIContextType | undefined>(undefined);
+export const APIContext = createContext<APIContextType | undefined>(undefined);
 
 // Define the props type for APIProvider
 interface APIProviderProps {
@@ -43,7 +62,7 @@ export const APIProvider: React.FC<APIProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
   const [searchResults, setSearchResults] = useState<any[]>([]);
-
+  
   useEffect(() => {
     const initialize = async () => {
       try {
@@ -83,7 +102,6 @@ export const APIProvider: React.FC<APIProviderProps> = ({ children }) => {
   const getHomeProducts = async (pageSize: number, currentPage: number) => {
     try {
       const fetchedToken = await fetchToken();
-     
       setToken(fetchedToken);
       return await fetchHomeProducts(fetchedToken, pageSize, currentPage);
     } catch (error) {
@@ -129,17 +147,38 @@ export const APIProvider: React.FC<APIProviderProps> = ({ children }) => {
       setLoading(false);
     }
   };
-  const handleAddUser = async (firstName: string, lastName: string, email: string, walletAddress:string) => {
+
+  const handleAddUser = async (firstName: string, lastName: string, email: string, walletAddress: string) => {
     const token = await fetchToken();
     try {
-      return await addUser(firstName, lastName, email,walletAddress, token);
+      return await addUser(firstName, lastName, email, walletAddress, token);
     } catch (error) {
       console.error('Error adding user:', error);
       throw error;
     }
   };
+
+  const createOrder = async (
+    walletId: string, // walletId as first argument
+    selectedProducts: itemSelected[],
+    shippingDetails: any,
+    billingDetails: any
+  ) => {
+    if (!walletId) {
+      throw new Error('Wallet ID is undefined');
+    }
+
+    try {
+      const fetchedToken = await fetchToken();
+      setToken(fetchedToken);
+      return await createNewOrder(fetchedToken, walletId, selectedProducts, shippingDetails, billingDetails);
+    } catch (error) {
+      console.error('Error creating order:', error);
+      throw error;
+    }
+  };
   return (
-    <APIContext.Provider value={{ token, categories, getCategoryProducts, getHomeProducts, getProductDetails, handleSendWalletId, performSearch, searchResults, loading, error, handleAddUser }}>
+    <APIContext.Provider value={{ token, categories, getCategoryProducts, getHomeProducts, getProductDetails, handleSendWalletId, performSearch, searchResults, loading, error, handleAddUser, createOrder }}>
       {children}
     </APIContext.Provider>
   );
