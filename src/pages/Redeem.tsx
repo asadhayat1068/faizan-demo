@@ -9,6 +9,7 @@ interface Product {
   price_eth: number;
   price_usd: number;
   productImageUrl: string;
+  stock_status:string;
 }
 
 function Redeem() {
@@ -99,16 +100,24 @@ function Redeem() {
                       ( &#8773; ${product.price_usd.toString()})
                     </span>
                   )}
+                  <span className={`text-sm ml-5 ${product.stock_status === 'In Stock' ? 'text-green-500' : 'text-red-500'}`}>
+  {product.stock_status}
+</span>
+
                 </div>
+                
+                {product.stock_status === 'In Stock' && (
                 <div className="flex items-center mt-2">
-                  <input
-                    type="checkbox"
-                    checked={selectedProducts.includes(product)}
-                    onChange={() => handleProductSelect(product)}
-                    className="mr-2"
-                  />
-                  <span>Select Item</span>
+                <input
+                type="checkbox"
+                checked={selectedProducts.includes(product)}
+                onChange={() => handleProductSelect(product)}
+                className="mr-2"
+                />
+                <span>Select Item</span>
                 </div>
+                )}
+                
               </div>
             ))}
           </div>

@@ -1,25 +1,39 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useState, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAPI } from '../apiContext';
 import { useAccount } from "wagmi";
 import Spinner from "../components/Spinner";
-import { useNavigate } from 'react-router-dom';
+
 const states = [
-  'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut',
-  'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa',
-  'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan',
-  'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire',
-  'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio',
-  'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota',
-  'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia',
-  'Wisconsin', 'Wyoming'
+  { name: 'Alabama', code: 'AL' }, { name: 'Alaska', code: 'AK' }, { name: 'Arizona', code: 'AZ' },
+  { name: 'Arkansas', code: 'AR' }, { name: 'California', code: 'CA' }, { name: 'Colorado', code: 'CO' },
+  { name: 'Connecticut', code: 'CT' }, { name: 'Delaware', code: 'DE' }, { name: 'Florida', code: 'FL' },
+  { name: 'Georgia', code: 'GA' }, { name: 'Hawaii', code: 'HI' }, { name: 'Idaho', code: 'ID' },
+  { name: 'Illinois', code: 'IL' }, { name: 'Indiana', code: 'IN' }, { name: 'Iowa', code: 'IA' },
+  { name: 'Kansas', code: 'KS' }, { name: 'Kentucky', code: 'KY' }, { name: 'Louisiana', code: 'LA' },
+  { name: 'Maine', code: 'ME' }, { name: 'Maryland', code: 'MD' }, { name: 'Massachusetts', code: 'MA' },
+  { name: 'Michigan', code: 'MI' }, { name: 'Minnesota', code: 'MN' }, { name: 'Mississippi', code: 'MS' },
+  { name: 'Missouri', code: 'MO' }, { name: 'Montana', code: 'MT' }, { name: 'Nebraska', code: 'NE' },
+  { name: 'Nevada', code: 'NV' }, { name: 'New Hampshire', code: 'NH' }, { name: 'New Jersey', code: 'NJ' },
+  { name: 'New Mexico', code: 'NM' }, { name: 'New York', code: 'NY' }, { name: 'North Carolina', code: 'NC' },
+  { name: 'North Dakota', code: 'ND' }, { name: 'Ohio', code: 'OH' }, { name: 'Oklahoma', code: 'OK' },
+  { name: 'Oregon', code: 'OR' }, { name: 'Pennsylvania', code: 'PA' }, { name: 'Rhode Island', code: 'RI' },
+  { name: 'South Carolina', code: 'SC' }, { name: 'South Dakota', code: 'SD' }, { name: 'Tennessee', code: 'TN' },
+  { name: 'Texas', code: 'TX' }, { name: 'Utah', code: 'UT' }, { name: 'Vermont', code: 'VT' },
+  { name: 'Virginia', code: 'VA' }, { name: 'Washington', code: 'WA' }, { name: 'West Virginia', code: 'WV' },
+  { name: 'Wisconsin', code: 'WI' }, { name: 'Wyoming', code: 'WY' }
+];
+
+const countries = [
+  { code: 'US', name: 'United States' },
+  // Add other countries here
 ];
 
 function Checkout() {
   const location = useLocation();
-  const { selectedProducts } = location.state || { selectedProducts: [] }; // Safely extract selected products
-  const { createOrder } = useAPI(); // Use createOrder from APIContext
-  const { address: walletId } = useAccount(); // Fetch walletId (address) from useAccount in wagmi
+  const { selectedProducts } = location.state || { selectedProducts: [] };
+  const { createOrder } = useAPI();
+  const { address: walletId } = useAccount();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [shippingAddress, setShippingAddress] = useState({
@@ -28,6 +42,7 @@ function Checkout() {
     state: '',
     city: '',
     zip: '',
+    country: 'US',
   });
   const [billingAddress, setBillingAddress] = useState({
     name: '',
@@ -35,9 +50,10 @@ function Checkout() {
     state: '',
     city: '',
     zip: '',
+    country: 'US',
   });
   const [sameAsShipping, setSameAsShipping] = useState(false);
-  const [error, setError] = useState<string | null>(null); // Error state
+  const [error, setError] = useState<string | null>(null);
   
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -62,6 +78,7 @@ function Checkout() {
         state: '',
         city: '',
         zip: '',
+        country: 'US',
       });
     }
   };
@@ -80,20 +97,104 @@ function Checkout() {
 
   const handleOrderCreation = async () => {
     setLoading(true);
+  
     if (!walletId || selectedProducts.length === 0) {
       setError('Missing required information');
-      setLoading(false); // Make sure to stop the loading indicator in case of error
+      setLoading(false);
       return;
     }
   
+    const regionIdMapping: { [key: string]: number } = {
+      'AL': 1,  // Alabama
+      'AK': 2,  // Alaska
+      'AZ': 4,  // Arizona
+      'AP': 11, // Armed Forces Pacific
+      'CA': 12, // California
+      'CO': 13, // Colorado
+      'CT': 14, // Connecticut
+      'DE': 15, // Delaware
+      'DC': 16, // District of Columbia
+      'FM': 17, // Federated States Of Micronesia
+      'FL': 18, // Florida
+      'GA': 19, // Georgia
+      'GU': 20, // Guam
+      'HI': 21, // Hawaii
+      'ID': 22, // Idaho
+      'IL': 23, // Illinois
+      'IN': 24, // Indiana
+      'IA': 25, // Iowa
+      'KS': 26, // Kansas
+      'KY': 27, // Kentucky
+      'LA': 28, // Louisiana
+      'ME': 29, // Maine
+      'MH': 30, // Marshall Islands
+      'MD': 31, // Maryland
+      'MA': 32, // Massachusetts
+      'MI': 33, // Michigan
+      'MN': 34, // Minnesota
+      'MS': 35, // Mississippi
+      'MO': 36, // Missouri
+      'MT': 37, // Montana
+      'NE': 38, // Nebraska
+      'NV': 39, // Nevada
+      'NH': 40, // New Hampshire
+      'NJ': 41, // New Jersey
+      'NM': 42, // New Mexico
+      'NY': 43, // New York
+      'NC': 44, // North Carolina
+      'ND': 45, // North Dakota
+      'MP': 46, // Northern Mariana Islands
+      'OH': 47, // Ohio
+      'OK': 48, // Oklahoma
+      'OR': 49, // Oregon
+      'PW': 50, // Palau
+      'PA': 51, // Pennsylvania
+      'PR': 52, // Puerto Rico
+      'RI': 53, // Rhode Island
+      'SC': 54, // South Carolina
+      'SD': 55, // South Dakota
+      'TN': 56, // Tennessee
+      'TX': 57, // Texas
+      'UT': 58, // Utah
+      'VT': 59, // Vermont
+      'VI': 60, // Virgin Islands
+      'VA': 61, // Virginia
+      'WA': 62, // Washington
+      'WV': 63, // West Virginia
+      'WI': 64, // Wisconsin
+      'WY': 65  // Wyoming
+    };
+    
+  
+    const shippingRegionId = regionIdMapping[shippingAddress.state] || 0;
+    const billingRegionId = regionIdMapping[billingAddress.state] || 0;
+  
+    const updatedShippingAddress = {
+      ...shippingAddress,
+      region_id: shippingRegionId,
+    };
+  
+    const updatedBillingAddress = {
+      ...billingAddress,
+      region_id: billingRegionId,
+    };
+  
     try {
-      const response = await createOrder(walletId, selectedProducts, shippingAddress, billingAddress);
-      
+      console.log('Sending order data:', {
+        walletId,
+        selectedProducts,
+        shippingAddress: updatedShippingAddress,
+        billingAddress: updatedBillingAddress
+      });
+  
+      const response = await createOrder(walletId, selectedProducts, updatedShippingAddress, updatedBillingAddress);
+  
+      console.log('Order response:', response);
+  
       if (response && response.status === 'success') {
-        // Navigate to the Success page and pass the orderId
         navigate('/success', { state: { orderId: response.orderId } });
       } else {
-        setError('Order failed. Please try again.');
+        setError(response.message || 'Order failed. Please try again.');
       }
   
       setLoading(false);
@@ -103,6 +204,8 @@ function Checkout() {
       setLoading(false);
     }
   };
+  
+
   if (loading) return <Spinner />;
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100 p-4">
@@ -112,7 +215,6 @@ function Checkout() {
         {selectedProducts.length > 0 ? (
           <div>
             <div className="relative">
-              {/* Left Arrow */}
               <button
                 className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-gray-300 p-2 hover:bg-gray-400"
                 onClick={scrollLeft}
@@ -120,13 +222,12 @@ function Checkout() {
                 &#9664;
               </button>
 
-              {/* Scrollable Product List */}
               <div
                 className="flex overflow-x-auto space-x-4 px-12"
                 ref={scrollContainerRef}
                 style={{ scrollSnapType: 'x mandatory' }}
               >
-                {selectedProducts.map((product: { productImageUrl: string | undefined; productName: string; price_eth: string; price_usd: string }, index: React.Key | null | undefined) => (
+                {selectedProducts.map((product: { productImageUrl: string | undefined; productName: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; price_eth: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; price_usd: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; }, index: React.Key | null | undefined) => (
                   <div
                     key={index}
                     className="flex-shrink-0 w-64 border rounded-lg p-4 shadow-lg"
@@ -149,7 +250,6 @@ function Checkout() {
                 ))}
               </div>
 
-              {/* Right Arrow */}
               <button
                 className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-gray-300 p-2 hover:bg-gray-400"
                 onClick={scrollRight}
@@ -158,7 +258,6 @@ function Checkout() {
               </button>
             </div>
 
-            {/* Shipping Information Form */}
             <div className="mb-4">
               <h2 className="text-xl font-bold mb-4">Shipping Information</h2>
               <div className="grid grid-cols-1 gap-4">
@@ -167,8 +266,8 @@ function Checkout() {
                   name="name"
                   value={shippingAddress.name}
                   onChange={handleShippingChange}
-                  placeholder="Full Name"
-                  className="border p-2 rounded w-full"
+                  placeholder="Name"
+                  className="p-2 border rounded"
                 />
                 <input
                   type="text"
@@ -176,28 +275,15 @@ function Checkout() {
                   value={shippingAddress.address}
                   onChange={handleShippingChange}
                   placeholder="Address"
-                  className="border p-2 rounded w-full"
+                  className="p-2 border rounded"
                 />
-                <select
-                  name="state"
-                  value={shippingAddress.state}
-                  onChange={handleShippingChange}
-                  className="border p-2 rounded w-full"
-                >
-                  <option value="">Select State</option>
-                  {states.map((state) => (
-                    <option key={state} value={state}>
-                      {state}
-                    </option>
-                  ))}
-                </select>
                 <input
                   type="text"
                   name="city"
                   value={shippingAddress.city}
                   onChange={handleShippingChange}
                   placeholder="City"
-                  className="border p-2 rounded w-full"
+                  className="p-2 border rounded"
                 />
                 <input
                   type="text"
@@ -205,94 +291,127 @@ function Checkout() {
                   value={shippingAddress.zip}
                   onChange={handleShippingChange}
                   placeholder="ZIP Code"
-                  className="border p-2 rounded w-full"
+                  className="p-2 border rounded"
                 />
+                <select
+                  name="state"
+                  value={shippingAddress.state}
+                  onChange={handleShippingChange}
+                  className="p-2 border rounded"
+                >
+                  <option value="">Select State</option>
+                  {states.map((state) => (
+                    <option key={state.code} value={state.code}>
+                      {state.name}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  name="country"
+                  value={shippingAddress.country}
+                  onChange={handleShippingChange}
+                  className="p-2 border rounded"
+                >
+                  <option value="">Select Country</option>
+                  {countries.map((country) => (
+                    <option key={country.code} value={country.code}>
+                      {country.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
-            {/* Checkbox to copy Shipping Address to Billing Address */}
-            <div className="mt-4 flex items-center">
-              <input
-                type="checkbox"
-                id="sameAsShipping"
-                checked={sameAsShipping}
-                onChange={handleCheckboxChange}
-                className="mr-2"
-              />
-              <label htmlFor="sameAsShipping" className="text-sm">
+            <div className="mb-4">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={sameAsShipping}
+                  onChange={handleCheckboxChange}
+                />
                 Same as shipping address
               </label>
+              {!sameAsShipping && (
+                <div>
+                  <h2 className="text-xl font-bold mb-4">Billing Information</h2>
+                  <div className="grid grid-cols-1 gap-4">
+                    <input
+                      type="text"
+                      name="name"
+                      value={billingAddress.name}
+                      onChange={handleBillingChange}
+                      placeholder="Name"
+                      className="p-2 border rounded"
+                    />
+                    <input
+                      type="text"
+                      name="address"
+                      value={billingAddress.address}
+                      onChange={handleBillingChange}
+                      placeholder="Address"
+                      className="p-2 border rounded"
+                    />
+                    <input
+                      type="text"
+                      name="city"
+                      value={billingAddress.city}
+                      onChange={handleBillingChange}
+                      placeholder="City"
+                      className="p-2 border rounded"
+                    />
+                    <input
+                      type="text"
+                      name="zip"
+                      value={billingAddress.zip}
+                      onChange={handleBillingChange}
+                      placeholder="ZIP Code"
+                      className="p-2 border rounded"
+                    />
+                    <select
+                      name="state"
+                      value={billingAddress.state}
+                      onChange={handleBillingChange}
+                      className="p-2 border rounded"
+                    >
+                      <option value="">Select State</option>
+                      {states.map((state) => (
+                        <option key={state.code} value={state.code}>
+                          {state.name}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      name="country"
+                      value={billingAddress.country}
+                      onChange={handleBillingChange}
+                      className="p-2 border rounded"
+                    >
+                      <option value="">Select Country</option>
+                      {countries.map((country) => (
+                        <option key={country.code} value={country.code}>
+                          {country.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Billing Information Form */}
-            {!sameAsShipping && (
-              <div className="mt-4">
-                <h2 className="text-xl font-bold mb-4">Billing Information</h2>
-                <div className="grid grid-cols-1 gap-4">
-                  <input
-                    type="text"
-                    name="name"
-                    value={billingAddress.name}
-                    onChange={handleBillingChange}
-                    placeholder="Full Name"
-                    className="border p-2 rounded w-full"
-                  />
-                  <input
-                    type="text"
-                    name="address"
-                    value={billingAddress.address}
-                    onChange={handleBillingChange}
-                    placeholder="Address"
-                    className="border p-2 rounded w-full"
-                  />
-                  <select
-                    name="state"
-                    value={billingAddress.state}
-                    onChange={handleBillingChange}
-                    className="border p-2 rounded w-full"
-                  >
-                    <option value="">Select State</option>
-                    {states.map((state) => (
-                      <option key={state} value={state}>
-                        {state}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    type="text"
-                    name="city"
-                    value={billingAddress.city}
-                    onChange={handleBillingChange}
-                    placeholder="City"
-                    className="border p-2 rounded w-full"
-                  />
-                  <input
-                    type="text"
-                    name="zip"
-                    value={billingAddress.zip}
-                    onChange={handleBillingChange}
-                    placeholder="ZIP Code"
-                    className="border p-2 rounded w-full"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Proceed to Payment Button */}
-            <div className="mt-8">
+            <div className="flex justify-end">
               <button
                 onClick={handleOrderCreation}
-                className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 float-right"
+                className="bg-blue-500 text-white p-2 rounded"
               >
-                Proceed to Payment
+                Proceed to Checkout
               </button>
             </div>
-
-            {/* Error Message */}
-            {error && <p className="text-red-500 mt-4">{error}</p>}
+            {error && <div className="text-red-500 mt-2">{error}</div>}
           </div>
         ) : (
-          <p>No products selected for checkout.</p>
+          <div className="text-center">
+            <p>No products selected for checkout.</p>
+          </div>
         )}
       </div>
     </div>
