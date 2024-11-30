@@ -51,12 +51,23 @@ const redeemProductURL = "https://cryptrovia.com/api/redeem_product_api.php";
 const searchUrl = "https://cryptrovia.com/api/itmsearch.php";
 const AddUserUrl = "https://cryptrovia.com/api/adduser.php";
 const checkoutProductURL = "https://cryptrovia.com/api/createorder.php";
+const redeemURL = "https://cryptrovia.com/api/redeem.php";
+
+// FedEx API credentials
+const FEDEX_API_URL = "https://apis.fedex.com/rate/v1/rates/quotes";
+const FEDEX_API_KEY = "h05q3f0SKRIkKfgu"; // Replace with your actual API Key
+const FEDEX_PASSWORD = "SZgGtQkBlyV3ezRPs2guRKkDA"; // Replace with your actual Password
+const ACCOUNT_NUMBER = "629970495"; // Replace with your Account Number
+const METER_NUMBER = "250813035"; // Replace with your Meter Number
+
+const FEDEX_CLIENT_ID = "h05q3f0SKRIkKfgu"; // Replace with your FedEx Client ID
+const FEDEX_CLIENT_SECRET = "SZgGtQkBlyV3ezRPs2guRKkDA"; // Replace with your FedEx Client Secret
 
 const fetchToken = async (): Promise<string> => {
   try {
     const cachedToken = localStorage.getItem("token");
     const cachedExpiration = localStorage.getItem("tokenExpiration");
-
+    console.log(cachedToken);
     if (cachedToken && cachedExpiration) {
       const currentTime = new Date().getTime();
       if (currentTime < parseInt(cachedExpiration, 10)) {
@@ -113,7 +124,10 @@ const fetchCategoryProducts = async (
   token: string,
   categoryId: number,
   pageSize = 10,
-  currentPage = 1
+  currentPage = 1,
+  color?: string, // Optional color filter
+  minPrice?: number, // Optional minimum price filter
+  maxPrice?: number // Optional maximum price filter
 ): Promise<any> => {
   try {
     const headers = {
@@ -121,11 +135,24 @@ const fetchCategoryProducts = async (
       "Content-Type": "application/json",
     };
 
-    const data = {
+    const data: Record<string, any> = {
       categoryId,
       pageSize,
       currentPage,
     };
+
+    // Add color filter if provided
+    if (color) {
+      data.color = color;
+    }
+
+    // Add price range filter if provided
+    if (minPrice !== undefined) {
+      data.minPrice = minPrice;
+    }
+    if (maxPrice !== undefined) {
+      data.maxPrice = maxPrice;
+    }
 
     const response = await axios.post(categoryproducts, data, { headers });
     return response.data;
@@ -141,6 +168,7 @@ const fetchCategoryProducts = async (
     }
   }
 };
+
 
 // Function to fetch home products
 const fetchHomeProducts = async (
@@ -269,29 +297,44 @@ const searchProducts = async (
   token: string,
   searchQuery: string,
   pageSize = 10,
-  currentPage = 1
+  currentPage = 1,
+  color?: string, // Optional color filter
+  minPrice?: number, // Optional minimum price
+  maxPrice?: number // Optional maximum price
 ): Promise<any> => {
   try {
-    const response = await axios.post(
-      searchUrl,
-      {
-        searchQuery,
-        pageSize,
-        currentPage,
-      },
-      {
-        headers: {
-          Authorization: `${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const headers = {
+      Authorization: `${token}`,
+      "Content-Type": "application/json",
+    };
+
+    // Construct the request payload
+    const data: any = {
+      searchQuery,
+      pageSize,
+      currentPage,
+    };
+
+    // Add filters for color and price if provided
+    if (color) {
+      data.color = color;
+    }
+    if (minPrice !== undefined && maxPrice !== undefined) {
+      data.minPrice = minPrice;
+      data.maxPrice = maxPrice;
+    }
+
+    // Make the API call
+    const response = await axios.post(searchUrl, data, { headers });
+
+    // Return raw response data
     return response.data;
-  } catch (error: unknown) {
+  } catch (error) {
     console.error("Error searching products:", error);
     throw error;
   }
 };
+
 
 const getMintPriceAndSignature = async (
   token: string,
@@ -386,6 +429,98 @@ const createNewOrder = async (
   }
 };
 
+const redeemProduct = async (
+orderId: string, paymentToken: string, walletId: string): Promise<any> => {
+  try {
+    const headers = {
+      "Content-Type": "application/json",
+    };
+
+    const data = {
+      orderId,
+      paymentToken,
+      walletId,
+    };
+
+    const response = await axios.post(redeemURL, data, { headers });
+    return response.data;
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      if (error.response && error.response.status === 401) {
+        throw new Error("TOKEN_EXPIRED");
+      }
+      console.error("Error redeeming product:", error.response?.data || error.message);
+      throw error;
+    } else {
+      console.error("Error redeeming product:", error);
+      throw error;
+    }
+  }
+};
+
+
+const getShippingRates = async (
+  origin: string,
+  destination: string,
+  weight: number
+): Promise<any> => {
+  try {
+    const headers = {
+      "Content-Type": "application/json",
+      "X-locale": "en_US", // Set locale for response language
+    };
+
+    const requestPayload = {
+      accountNumber: { value: ACCOUNT_NUMBER }, // Your FedEx Account Number
+      requestedShipment: {
+        shipper: { 
+          address: { postalCode: origin, countryCode: "US" } 
+        },
+        recipient: { 
+          address: { postalCode: destination, countryCode: "US" } 
+        },
+        packages: [
+          {
+            weight: { 
+              units: "LB", // Weight unit: LB (Pounds)
+              value: weight, // Weight value
+            },
+          },
+        ],
+        serviceType: "FEDEX_GROUND", // FedEx Service Type (Adjust if needed)
+        packagingType: "YOUR_PACKAGING", // Packaging Type (Adjust if needed)
+      },
+    };
+
+    console.log("Sending FedEx API request with payload:", requestPayload);
+
+    // Make the API request to FedEx
+    const response = await axios.post(FEDEX_API_URL, requestPayload, {
+      headers,
+      auth: {
+        username: FEDEX_API_KEY, // FedEx API Key
+        password: FEDEX_PASSWORD, // FedEx API Password
+      },
+    });
+
+    // Log and return the response data
+    console.log("Received FedEx API response:", response.data);
+    return response.data;
+
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error(
+        "FedEx API error:",
+        error.response?.status || "Unknown status",
+        error.response?.data || error.message
+      );
+    } else {
+      console.error("Unexpected error while fetching FedEx rates:", error);
+    }
+    throw new Error("Failed to fetch FedEx rates. Please try again later.");
+  }
+};
+
 
 
 export {
@@ -398,5 +533,5 @@ export {
   searchProducts,
   getMintPriceAndSignature,
   addUser,
-  createNewOrder, type itemSelected,
+  createNewOrder,redeemProduct,getShippingRates, type itemSelected,
 };

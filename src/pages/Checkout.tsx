@@ -32,7 +32,7 @@ const countries = [
 function Checkout() {
   const location = useLocation();
   const { selectedProducts } = location.state || { selectedProducts: [] };
-  const { createOrder } = useAPI();
+  const { createOrder,getFedExShippingRates } = useAPI();
   const { address: walletId } = useAccount();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -56,12 +56,8 @@ function Checkout() {
   const [error, setError] = useState<string | null>(null);
   
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  const handleShippingChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setShippingAddress((prev) => ({ ...prev, [name]: value }));
-  };
-
+  const [shippingOptions, setShippingOptions] = useState<any[]>([]);
+  const [shippingError, setShippingError] = useState<string | null>(null);
   const handleBillingChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setBillingAddress((prev) => ({ ...prev, [name]: value }));
@@ -204,7 +200,33 @@ function Checkout() {
       setLoading(false);
     }
   };
-  
+  const handleShippingChange = async (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setShippingAddress((prev) => ({ ...prev, [name]: value }));
+
+    if (name === 'zip' && value.length === 5) {console.log(value);
+      try {
+        setShippingError(null); // Reset error state
+        setShippingOptions([]); // Reset shipping options state
+
+        const origin = "20723"; // Replace with your predefined origin postal code
+        const weight = 5; // Replace with your desired weight (can be dynamic based on selected products)
+        const rates = await getFedExShippingRates(origin, value, weight);
+
+        if (rates && rates.rateReplyDetails) {
+          const options = rates.rateReplyDetails.map((rate: any) => ({
+            serviceType: rate.serviceType,
+            deliveryDate: rate.commit.dateDetail,
+            cost: rate.ratedShipmentDetails[0].totalNetCharge.amount,
+          }));
+          setShippingOptions(options);
+        }
+      } catch (err) {
+        console.error('Error fetching shipping rates:', err);
+        setShippingError('Unable to fetch shipping rates. Please try again later.');
+      }
+    }
+  };
 
   if (loading) return <Spinner />;
   return (
@@ -397,7 +419,21 @@ function Checkout() {
                 </div>
               )}
             </div>
+ {/* Shipping Options */}
+ {shippingOptions.length > 0 && (
+          <div className="mt-4">
+            <h3 className="text-lg font-bold">Shipping Options:</h3>
+            <ul className="list-disc pl-5">
+              {shippingOptions.map((option, index) => (
+                <li key={index}>
+                  <strong>{option.serviceType}</strong> - {option.deliveryDate} - ${option.cost}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
+        {shippingError && <p className="text-red-500 mt-2">{shippingError}</p>}
             <div className="flex justify-end">
               <button
                 onClick={handleOrderCreation}

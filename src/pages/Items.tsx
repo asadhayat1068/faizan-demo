@@ -105,7 +105,7 @@ const Items: React.FC = () => {
     setIsFilterVisible((prev) => !prev);
   };
 
-  const handleColorSelect = (color: string) => {
+  const handleColorSelect = (color: string) => {console.log(color)
     setSelectedColor(color === selectedColor ? '' : color);
   };
 
@@ -116,11 +116,31 @@ const Items: React.FC = () => {
   const handleMaxPriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setMaxPrice(Number(event.target.value));
   };
-  const applyFilters = () => {
-    // Apply filters to the product list based on selected color and price range
-    // This is a placeholder for the actual filtering logic
-    console.log('Filters applied:', { selectedColor, minPrice, maxPrice });
+  const applyFilters = async () => {
+    try {
+      setLoading(true); // Show loading spinner
+      const { items: filteredProducts, total_count: filteredTotalCount } =
+        await getCategoryProducts(
+          Number(categoryId), // Current category ID
+          pageSize, // Number of products per page
+          1, // Reset to the first page
+          selectedColor, // Selected color filter
+          minPrice, // Minimum price
+          maxPrice // Maximum price
+        );
+      setProducts(filteredProducts); // Update products state
+      setTotalCount(filteredTotalCount); // Update total count state
+      setCurrentPage(1); // Reset to the first page
+      setIsFilterVisible(false); // Hide the filter modal after applying
+    } catch (error) {
+      setError(error as Error); // Capture and set error state
+      console.error("Error applying filters:", error);
+    } finally {
+      setLoading(false); // Hide loading spinner
+    }
   };
+  
+  
   return (
     <div className="container mx-auto px-4 py-8 relative">
       <div className="flex justify-between mb-4">
@@ -147,9 +167,9 @@ const Items: React.FC = () => {
                   className={`w-8 h-8 rounded cursor-pointer relative ${selectedColor === color.value ? 'ring-2 ring-offset-2 ring-yellow-500' : ''}`}
                   style={{ backgroundColor: color.value }}
                   title={color.name}
-                  onClick={() => handleColorSelect(color.value)}
+                  onClick={() => handleColorSelect(color.name)}
                 >
-                  {selectedColor === color.value && (
+                  {selectedColor === color.name && (
                     <FaCheck className="text-white absolute inset-0 flex items-center justify-center" />
                   )}
                 </div>

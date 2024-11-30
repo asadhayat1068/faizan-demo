@@ -1,9 +1,29 @@
+import React, { useEffect } from "react";
 import { useLocation } from 'react-router-dom';
-
+import { useAPI } from "../apiContext";
+import { useCurrencySelector } from "../providers/CurrencySelector/currencySelectorProvider";
+import { useAccount } from "wagmi";
 const Success = () => {
   const location = useLocation();
   const { orderId } = location.state || {}; // Retrieve the orderId from the state if available
+  const { redeemProducts } = useAPI();
+  const { currency } = useCurrencySelector();
+  const { address: walletId } = useAccount();
+  useEffect(() => {
+    const handleRedeem = async () => {
+      if (orderId) {
+        try {
+          const paymentToken = currency.address;
+          const response = await redeemProducts(orderId, paymentToken, walletId || "");
+          console.log("Redeem response:", response);
+        } catch (error) {
+          console.error("Error redeeming product:", error);
+        }
+      }
+    };
 
+    handleRedeem();
+  }, [orderId, redeemProducts, walletId, currency]);
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-green-100">
       <div className="bg-white p-8 rounded-lg shadow-md">
