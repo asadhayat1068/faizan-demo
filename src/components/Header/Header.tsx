@@ -55,6 +55,8 @@ function Header() {
               <option value="ETH">ETH</option>
               <option value="USDC">USDC</option>
               <option value="USDT">USDT</option>
+              <option value="MockUSDC">MockUSDC</option>
+              <option value="MockUSDT">MockUSDT</option>
             </select>
           </div>
           <span>Current Currency: {currency.symbol}</span>
