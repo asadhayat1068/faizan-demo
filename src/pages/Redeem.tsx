@@ -5,6 +5,7 @@ import eth from "../asserts/images/Etherium.svg";
 import { useNavigate } from 'react-router-dom';
 
 interface Product {
+  amount: string;
   productName: string;
   price_eth: number;
   price_usd: number;
@@ -26,7 +27,9 @@ function Redeem() {
         const response = await handleSendWalletId(address);
         console.log(response.products);
         if (response && response.products) {
-          setProducts(response.products);
+          // Filter products where product.amount > 0
+          const filteredProducts = response.products.filter((product: Product) => parseFloat(product.amount) > 0);
+          setProducts(filteredProducts);
           setResponseMessage('');
         } else {
           setProducts([]);
@@ -42,6 +45,7 @@ function Redeem() {
       }
     }
   };
+  
 
   useEffect(() => {
     if (address) {
