@@ -32,7 +32,7 @@ const countries = [
 function Checkout() {
   const location = useLocation();
   const { selectedProducts } = location.state || { selectedProducts: [] };
-  const { createOrder,getFedExShippingRates } = useAPI();
+  const { createOrder } = useAPI();
   const { address: walletId } = useAccount();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();

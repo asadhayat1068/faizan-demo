@@ -53,11 +53,7 @@ type APIContextType = {
     billingDetails: any
   ) => Promise<any>;
   redeemProducts: (orderId: string, paymentToken: string,walletId: string) => Promise<any>;
-  getFedExShippingRates: (
-    origin: string,
-    destination: string,
-    weight: number
-  ) => Promise<any>;
+  
 };
 
 // Define the types for product and product details
@@ -294,7 +290,7 @@ export const APIProvider: React.FC<APIProviderProps> = ({ children }) => {
         handleAddUser,
         createOrder,
         redeemProducts,
-        getFedExShippingRates,
+        
       }}
     >
       {children}
