@@ -24,7 +24,6 @@ interface itemSelected {
   productImageUrl: string;
 }
 
-
 interface HomeProductsResponse {
   categories: Category[];
 }
@@ -79,7 +78,9 @@ const fetchToken = async (): Promise<string> => {
     const token: string = response.data;
 
     if (!token || typeof token !== "string") {
-      throw new Error("Token received from server is null, undefined, or not a string");
+      throw new Error(
+        "Token received from server is null, undefined, or not a string"
+      );
     }
 
     const TOKEN_EXPIRATION_TIME = 3 * 60 * 60 + 50 * 60;
@@ -91,7 +92,10 @@ const fetchToken = async (): Promise<string> => {
     return token;
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
-      console.error("Error fetching token:", error.response ? error.response.data : error.message);
+      console.error(
+        "Error fetching token:",
+        error.response ? error.response.data : error.message
+      );
     } else {
       console.error("Error fetching token:", error);
     }
@@ -169,7 +173,6 @@ const fetchCategoryProducts = async (
   }
 };
 
-
 // Function to fetch home products
 const fetchHomeProducts = async (
   token: string,
@@ -191,7 +194,7 @@ const fetchHomeProducts = async (
     };
     //console.log(token);
     const response = await axios.post(homeItems, data, { headers });
-    
+
     // Ensure response data is in expected format
     if (!response.data || !Array.isArray(response.data.categories)) {
       throw new Error("Invalid data structure");
@@ -231,7 +234,6 @@ const fetchHomeProducts = async (
   }
 };
 
-
 const fetchProductDetails = async (
   token: string,
   productId: number
@@ -253,9 +255,10 @@ const fetchProductDetails = async (
       id: item.id,
       name: item.name,
       sku: item.sku,
-      description: item.custom_attributes.find(
-        (attr: CustomAttribute) => attr.attribute_code === "description"
-      )?.value || "",
+      description:
+        item.custom_attributes.find(
+          (attr: CustomAttribute) => attr.attribute_code === "description"
+        )?.value || "",
       price_eth: item.price_eth,
       price_usd: item.price_usd,
       conversionRate: response.data.conversion_rate,
@@ -335,7 +338,6 @@ const searchProducts = async (
   }
 };
 
-
 const getMintPriceAndSignature = async (
   token: string,
   walletAddress: string,
@@ -380,7 +382,7 @@ const addUser = async (
       firstName,
       lastName,
       email,
-      walletAddress
+      walletAddress,
     };
 
     const response = await axios.post(AddUserUrl, data, {
@@ -410,27 +412,44 @@ const createNewOrder = async (
       walletId: userwalletId, // Include wallet ID
       products: selectedProducts, // Selected products
       shipping: shippingDetails, // Shipping details
-      billing: billingDetails // Billing details
+      billing: billingDetails, // Billing details
     };
 
     // Make the POST request using axios
     const response = await axios.post(checkoutProductURL, orderData, {
       headers: {
         Authorization: `Bearer ${token}`, // Include Bearer token in headers
-        'Content-Type': 'application/json' // Ensure the content type is JSON
+        "Content-Type": "application/json", // Ensure the content type is JSON
       },
     });
 
     // Return the response data
     return response.data;
   } catch (error) {
-    console.error('Error creating new order:', error);
+    console.error("Error creating new order:", error);
     throw error;
   }
 };
 
+interface RedeemData {
+  ids: string[];
+  amounts: string[];
+  orderId: string;
+  fee: string;
+  timestamp: string;
+  paymentToken: string;
+  signature: string;
+}
+interface RedeemResponse {
+  data: RedeemData;
+  message: string;
+}
+
 const redeemProduct = async (
-orderId: string, paymentToken: string, walletId: string): Promise<any> => {
+  orderId: string,
+  paymentToken: string,
+  walletId: string
+): Promise<RedeemResponse> => {
   try {
     const headers = {
       "Content-Type": "application/json",
@@ -449,7 +468,10 @@ orderId: string, paymentToken: string, walletId: string): Promise<any> => {
       if (error.response && error.response.status === 401) {
         throw new Error("TOKEN_EXPIRED");
       }
-      console.error("Error redeeming product:", error.response?.data || error.message);
+      console.error(
+        "Error redeeming product:",
+        error.response?.data || error.message
+      );
       throw error;
     } else {
       console.error("Error redeeming product:", error);
@@ -457,7 +479,6 @@ orderId: string, paymentToken: string, walletId: string): Promise<any> => {
     }
   }
 };
-
 
 const getShippingRates = async (
   origin: string,
@@ -473,15 +494,15 @@ const getShippingRates = async (
     const requestPayload = {
       accountNumber: { value: ACCOUNT_NUMBER }, // Your FedEx Account Number
       requestedShipment: {
-        shipper: { 
-          address: { postalCode: origin, countryCode: "US" } 
+        shipper: {
+          address: { postalCode: origin, countryCode: "US" },
         },
-        recipient: { 
-          address: { postalCode: destination, countryCode: "US" } 
+        recipient: {
+          address: { postalCode: destination, countryCode: "US" },
         },
         packages: [
           {
-            weight: { 
+            weight: {
               units: "LB", // Weight unit: LB (Pounds)
               value: weight, // Weight value
             },
@@ -506,7 +527,6 @@ const getShippingRates = async (
     // Log and return the response data
     console.log("Received FedEx API response:", response.data);
     return response.data;
-
   } catch (error) {
     if (axios.isAxiosError(error)) {
       console.error(
@@ -521,8 +541,6 @@ const getShippingRates = async (
   }
 };
 
-
-
 export {
   fetchToken,
   fetchCategories,
@@ -533,5 +551,8 @@ export {
   searchProducts,
   getMintPriceAndSignature,
   addUser,
-  createNewOrder,redeemProduct,getShippingRates, type itemSelected,
+  createNewOrder,
+  redeemProduct,
+  getShippingRates,
+  type itemSelected,
 };

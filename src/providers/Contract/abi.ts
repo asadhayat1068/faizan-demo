@@ -1,4 +1,5 @@
-export const CryptroviaAddress = "0xBA0D32C9Ab4Ad681d13cf7e95bEb3542997Ada38";
+// export const CryptroviaAddress = "0xBA0D32C9Ab4Ad681d13cf7e95bEb3542997Ada38";
+export const CryptroviaAddress = "0x9b02cB76A4C22bF7818E898eFB9efCbc167cc168";
 export const CryptroviaABI = [
   {
     inputs: [
@@ -569,6 +570,92 @@ export const CryptroviaABI = [
     type: "function",
   },
   { stateMutability: "payable", type: "receive" },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "wallet",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "uint256[]",
+        name: "tokens",
+        type: "uint256[]",
+      },
+      {
+        indexed: false,
+        internalType: "uint256[]",
+        name: "amounts",
+        type: "uint256[]",
+      },
+      {
+        indexed: true,
+        internalType: "string",
+        name: "orderId",
+        type: "string",
+      },
+      {
+        indexed: false,
+        internalType: "address",
+        name: "paymentToken",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "fee",
+        type: "uint256",
+      },
+    ],
+    name: "Redeem",
+    type: "event",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256[]",
+        name: "_ids",
+        type: "uint256[]",
+      },
+      {
+        internalType: "uint256[]",
+        name: "_amounts",
+        type: "uint256[]",
+      },
+      {
+        internalType: "string",
+        name: "_orderId",
+        type: "string",
+      },
+      {
+        internalType: "uint256",
+        name: "_timestamp",
+        type: "uint256",
+      },
+      {
+        internalType: "address",
+        name: "_paymentToken",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "_fee",
+        type: "uint256",
+      },
+      {
+        internalType: "bytes",
+        name: "_signature",
+        type: "bytes",
+      },
+    ],
+    name: "redeem",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
 ];
 export const ERC20ABI = [
   {

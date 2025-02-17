@@ -10,8 +10,7 @@ import { useConfig } from "wagmi";
 import { CryptroviaABI, CryptroviaAddress } from "../../providers/Contract/abi";
 import { BigNumber } from "ethers";
 import {
-  getMintPriceAndSignature,
-  fetchToken,
+  redeemProduct,
 } from "../../services/apiService";
 import { useAPI } from "../../apiContext";
 import {
@@ -26,12 +25,11 @@ import { ReactComponent as ThreeDots } from "../../asserts/icons/3dots.svg";
 import { ReactComponent as ErrorIcon } from "../../asserts/icons/error.svg";
 import RegistrationForm from "./Kyc";
 
-interface MintModalProps {
-  setShowMintModal: (show: boolean) => void;
-  showMintModal: boolean;
+interface RedeemModalProps {
+  setShowModal: (show: boolean) => void;
+  showModal: boolean;
   walletAddress: Address;
-  sku: string;
-  quantity: number;
+  orderId: string;
   paymentToken: Address;
 }
 
@@ -50,15 +48,11 @@ type Step = {
 
 const _steps: Step[] = [
   {
-    title: "Getting token metadata",
+    title: "Getting redeem signature",
     state: LoadingState.IN_PROGRESS,
   },
   {
-    title: "Getting token spending approval",
-    state: LoadingState.PENDING,
-  },
-  {
-    title: "Minting the token",
+    title: "Redeem the token",
     state: LoadingState.PENDING,
   },
   {
@@ -67,18 +61,17 @@ const _steps: Step[] = [
   },
 ];
 
-const MintModal = ({
-  setShowMintModal,
-  showMintModal,
+const RedeemModal = ({
+  setShowModal,
+  showModal,
   walletAddress,
-  sku,
-  quantity,
+  orderId,
   paymentToken,
-}: MintModalProps) => {
+}: RedeemModalProps) => {
   const _localSteps = JSON.parse(JSON.stringify(_steps));
-  const localSteps = [_localSteps[0]];
-  localSteps.push(_localSteps[2], _localSteps[3]);
-  const [steps, setSteps] = useState<Step[]>(localSteps);
+  // const localSteps = [_localSteps[0]];
+  // localSteps.push(_localSteps[2], _localSteps[3]);
+  const [steps, setSteps] = useState<Step[]>(_localSteps);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [txCompleted, setTxCompleted] = useState<boolean>(false);
   const [txHash, setTxHash] = useState<string | null>(null);
@@ -95,21 +88,29 @@ const MintModal = ({
   const mintWithETH = async () => {
     try {
       // Step 1: Fetch Metadata
-      const metaData = await getMetadata(0, walletAddress, paymentToken, sku);
+      const response = await getMetadata(
+        0,
+        orderId,
+        paymentToken,
+        walletAddress
+      );
+      console.log("Redeem response:", response);
 
       // Check if the metadata exists
-      if (metaData.exists === false) {
+      if (!response.data || !response.data.signature) {
         setMetaDataExists(false);
       } else {
+        const redeemData = response.data;
         setMetaDataExists(true);
-        await processMintWithETH(
+        await processRedeemWithETH(
           1,
+          redeemData.ids ?? [],
+          redeemData.amounts ?? [],
+          redeemData.orderId ?? "",
+          redeemData.fee,
           walletAddress,
-          metaData.price,
-          quantity,
-          metaData.sku,
-          metaData.signature,
-          metaData.timestamp
+          redeemData.signature,
+          redeemData.timestamp
         );
       }
     } catch (error) {}
@@ -117,9 +118,9 @@ const MintModal = ({
 
   const getMetadata = async (
     _stepNumber: number,
-    _walletAddress: Address,
-    _paymentToken: Address,
-    _sku: string
+    _orderId: string,
+    _paymentToken: string,
+    _walletAddress: string
   ) => {
     setSteps((steps_) => {
       const newSteps = steps_.slice();
@@ -131,12 +132,11 @@ const MintModal = ({
     });
 
     try {
-      const token = await fetchToken();
-      const metaData = await getMintPriceAndSignature(
-        token,
-        _walletAddress,
-        _paymentToken,
-        _sku
+      // const token = await fetchToken();
+      const metaData = await redeemProduct(
+        orderId,
+        paymentToken,
+        walletAddress
       );
 
       setSteps((steps_) => {
@@ -163,12 +163,13 @@ const MintModal = ({
     }
   };
 
-  const processMintWithETH = async (
+  const processRedeemWithETH = async (
     _stepNumber: number,
+    _ids: string[],
+    _amounts: string[],
+    _orderId: string,
+    _feeInWei: string,
     _walletAddress: Address,
-    _price: BigNumber,
-    _quantity: number,
-    _sku: string,
     _signature: string,
     _timestamp: string
   ) => {
@@ -180,21 +181,22 @@ const MintModal = ({
       };
       return newSteps;
     });
+    const paymentToken = zeroAddress;
     try {
       await simulateContract(config, {
         abi: CryptroviaABI,
         address: CryptroviaAddress,
-        functionName: "mint",
+        functionName: "redeem",
         args: [
-          _walletAddress,
-          _sku,
-          zeroAddress,
-          BigNumber.from(_price).toBigInt(),
-          _quantity,
+          _ids,
+          _amounts,
+          _orderId,
           _timestamp,
+          paymentToken,
+          BigNumber.from(_feeInWei).toBigInt(),
           _signature,
         ],
-        value: BigNumber.from(_price).mul(_quantity).toBigInt(),
+        value: BigNumber.from(_feeInWei).toBigInt(),
       });
     } catch (error: any) {
       const _e = error as ContractFunctionRevertedErrorType;
@@ -214,17 +216,17 @@ const MintModal = ({
       const hash = await writeContract(config, {
         abi: CryptroviaABI,
         address: CryptroviaAddress,
-        functionName: "mint",
+        functionName: "redeem",
         args: [
-          _walletAddress,
-          _sku,
-          zeroAddress,
-          BigNumber.from(_price).toBigInt(),
-          _quantity,
+          _ids,
+          _amounts,
+          _orderId,
           _timestamp,
+          paymentToken,
+          BigNumber.from(_feeInWei).toBigInt(),
           _signature,
         ],
-        value: BigNumber.from(_price).mul(_quantity).toBigInt(),
+        value: BigNumber.from(_feeInWei).toBigInt(),
       });
 
       setTxHash(hash);
@@ -310,11 +312,11 @@ const MintModal = ({
       );
       setLoading(false);
       setMetaDataExists(true); // Set metaDataExists to true after successful registration
-      setShowMintModal(false); // Close the mint modal
+      setShowModal(false); // Close the mint modal
 
       // Reopen the mint modal after 2 seconds
       setTimeout(() => {
-        setShowMintModal(true);
+        setShowModal(true);
       }, 2000);
     } catch (error) {
       console.error("Registration failed", error);
@@ -348,7 +350,7 @@ const MintModal = ({
 
   return (
     <ReactModal
-      isOpen={showMintModal}
+      isOpen={showModal}
       onAfterOpen={mintWithETH}
       contentLabel="Minimal Modal Example"
       className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none"
@@ -398,7 +400,7 @@ const MintModal = ({
                 )}
                 {txCompleted && (
                   <button
-                    onClick={() => setShowMintModal(false)}
+                    onClick={() => setShowModal(false)}
                     className="mt-5 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm"
                   >
                     Close
@@ -413,4 +415,4 @@ const MintModal = ({
   );
 };
 
-export default MintModal;
+export default RedeemModal;
