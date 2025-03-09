@@ -63,15 +63,15 @@ const _steps: Step[] = [
     state: LoadingState.PENDING,
   },
   {
-    title: "Waiting for transaction confirmation",
+    title: "Waiting for approval transaction confirmation",
     state: LoadingState.PENDING,
   },
   {
-    title: "Redeem the token",
+    title: "Redeeming the token",
     state: LoadingState.PENDING,
   },
   {
-    title: "Confirming the transaction",
+    title: "Waiting for redeem transaction confirmation",
     state: LoadingState.PENDING,
   },
 ];
@@ -117,7 +117,7 @@ const RedeemWithERC20Modal = ({
       // Step 4-5
       console.log("Starting Redemption with ERC20");
       await processRedeemWithERC20(
-        3,
+        4,
         redeemData.ids ?? [],
         redeemData.amounts ?? [],
         redeemData.orderId ?? "",
@@ -242,6 +242,7 @@ const RedeemWithERC20Modal = ({
     _paymentToken: Address,
     _price: BigNumber
   ) => {
+    console.log("Starting Step 2");
     setSteps((steps_) => {
       const newSteps = steps_.slice();
       newSteps[_stepNumber] = {
@@ -289,7 +290,7 @@ const RedeemWithERC20Modal = ({
           BigNumber.from(_price).toBigInt(),
         ],
       });
-
+      console.log("Step 2 Done");
       setSteps((steps_) => {
         const newSteps = steps_.slice();
         newSteps[_stepNumber] = {
@@ -302,6 +303,7 @@ const RedeemWithERC20Modal = ({
         };
         return newSteps;
       });
+      console.log("Step 3 Started");
       // Watch for confirmations
       await new Promise((resolve) => {
         const unwatch = watchBlockNumber(config, {
@@ -310,7 +312,6 @@ const RedeemWithERC20Modal = ({
               hash,
             });
             if (confirmations >= 3) {
-              unwatch();
               setSteps((steps_) => {
                 const newSteps = steps_.slice();
                 newSteps[_stepNumber + 1] = {
@@ -319,6 +320,8 @@ const RedeemWithERC20Modal = ({
                 };
                 return newSteps;
               });
+              console.log("STEP3 DONE", _stepNumber);
+              unwatch();
               resolve("done");
             }
           },
@@ -355,6 +358,7 @@ const RedeemWithERC20Modal = ({
     _signature: string,
     _timestamp: string
   ) => {
+    console.log("STEP 4 LOADING")
     setSteps((steps_) => {
       const newSteps = steps_.slice();
       newSteps[_stepNumber] = {
@@ -408,27 +412,37 @@ const RedeemWithERC20Modal = ({
           _signature,
         ]
       });
-
+      console.log("STEP 4 DONE");
       setTxHash(hash);
       console.log(_stepNumber);
       setSteps((steps_) => {
         const newSteps = steps_.slice();
-        newSteps[_stepNumber+1] = {
+        newSteps[_stepNumber] = {
           ...newSteps[_stepNumber],
           state: LoadingState.DONE,
         };
-        newSteps[_stepNumber + 2] = {
-          ...newSteps[_stepNumber + 2],
+        newSteps[_stepNumber + 1] = {
+          ...newSteps[_stepNumber + 1],
           state: LoadingState.IN_PROGRESS,
         };
         return newSteps;
       });
 
+      console.log("STEP 5 LOADING");
       const unwatch = watchBlockNumber(config, {
         onBlockNumber: async (blockNumber) => {
-          const confirmations = await getTransactionConfirmations(config, {
-            hash,
-          });
+          let confirmations: bigint = BigInt(0);
+          while(true) {
+            try {
+              confirmations = await getTransactionConfirmations(config, {
+                hash,
+              });
+              if(confirmations >3) {break;} 
+            } catch (e) {
+              continue;
+            }
+          }
+
           if (confirmations >= 3) {
             unwatch();
             setSteps((steps_) => {
@@ -443,6 +457,7 @@ const RedeemWithERC20Modal = ({
           }
         },
       });
+      console.log("STEP 5 DONE");
     } catch (error) {
       const _e = error as TransactionExecutionErrorType;
       setSteps((steps_) => {
