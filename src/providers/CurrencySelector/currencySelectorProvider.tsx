@@ -5,6 +5,8 @@ export enum CURRENCY {
   ETH = "ETH",
   USDC = "USDC",
   USDT = "USDT",
+  MockUSDC = "MockUSDC",
+  MockUSDT = "MockUSDT",
 }
 
 export type Currency = {
@@ -36,6 +38,18 @@ const currencyAddressMap: CurrencyAddressMap = {
     address: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
     decimals: 6,
     networkId: 0x1,
+  },
+  [CURRENCY.MockUSDC]: {
+    symbol: CURRENCY.MockUSDC,
+    address: "0xC81bb60D0258383F9B518fff3e32fCc57Ad224A0",
+    decimals: 6,
+    networkId: 0xa869,
+  },
+  [CURRENCY.MockUSDT]: {
+    symbol: CURRENCY.MockUSDT,
+    address: "0xBD84c8129Fd6201CD668ffE75269EEA29ff28Ef9",
+    decimals: 6,
+    networkId: 0xa869,
   },
 };
 
