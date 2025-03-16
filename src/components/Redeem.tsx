@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { Address, zeroAddress } from "viem";
 import { redeemProduct } from "../services/apiService";
 import RedeemModal from "./Modal/RedeemModal";
+import RedeemWithERC20Modal from "./Modal/RedeemWithERC20Modal";
 
 interface RedeemModalProps {
   setShowModal: (show: boolean) => void;
@@ -51,7 +52,13 @@ function Redeem({
           paymentToken={paymentToken}
         />
       ) : (
-        <>Redeem with ERC20</>
+        <RedeemWithERC20Modal
+          setShowModal={setShowModal}
+          showModal={showModal}
+          walletAddress={walletAddress}
+          orderId={orderId}
+          paymentToken={paymentToken}
+        />
       )}
     </>
   );

@@ -67,7 +67,7 @@ const countries = [
 function Checkout() {
   const location = useLocation();
   const { selectedProducts } = location.state || { selectedProducts: [] };
-  const { createOrder, getFedExShippingRates, redeemProducts } = useAPI();
+  const { createOrder } = useAPI();
   const { address: walletId } = useAccount();
   const [loading, setLoading] = useState(false);
   const [orderId, setOrderId] = useState(null);
@@ -260,8 +260,7 @@ function Checkout() {
     const { name, value } = e.target;
     setShippingAddress((prev) => ({ ...prev, [name]: value }));
 
-    if (name === "zip" && value.length === 5) {
-      console.log(value);
+    /*if (name === 'zip' && value.length === 5) {console.log(value);
       try {
         setShippingError(null); // Reset error state
         setShippingOptions([]); // Reset shipping options state
@@ -284,7 +283,7 @@ function Checkout() {
           "Unable to fetch shipping rates. Please try again later."
         );
       }
-    }
+    }*/
   };
 
   if (loading) return <Spinner />;

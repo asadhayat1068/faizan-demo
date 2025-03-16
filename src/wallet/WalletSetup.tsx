@@ -9,7 +9,7 @@ const cHardHat = {
 export const defaultConfig = getDefaultConfig({
   appName: "Cryptrovia",
   projectId: (process.env.REACT_APP_PROJECT_ID || "").toString(),
-  chains: [mainnet, avalancheFuji],
+  chains: [avalancheFuji],
   ssr: false,
 });
 

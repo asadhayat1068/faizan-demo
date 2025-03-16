@@ -5,9 +5,10 @@ import {
   ContractFunctionRevertedErrorType,
   TransactionExecutionErrorType,
   zeroAddress,
+  erc20Abi
 } from "viem";
 import { useConfig } from "wagmi";
-import { CryptroviaABI, CryptroviaAddress } from "../../providers/Contract/abi";
+import { CryptroviaABI, CryptroviaAddress, ERC20ABI } from "../../providers/Contract/abi";
 import { BigNumber } from "ethers";
 import {
   redeemProduct,
@@ -15,6 +16,7 @@ import {
 import { useAPI } from "../../apiContext";
 import {
   getTransactionConfirmations,
+  readContract,
   simulateContract,
   watchBlockNumber,
   writeContract,
@@ -24,7 +26,8 @@ import { ReactComponent as ThreeDotsBounce } from "../../asserts/icons/3dots-bou
 import { ReactComponent as ThreeDots } from "../../asserts/icons/3dots.svg";
 import { ReactComponent as ErrorIcon } from "../../asserts/icons/error.svg";
 import RegistrationForm from "./Kyc";
-import { Link } from "react-router-dom";
+import { USDTABI } from "../../providers/Contract/usdt_abit";
+import { Link, redirect } from "react-router-dom";
 
 interface RedeemModalProps {
   setShowModal: (show: boolean) => void;
@@ -53,16 +56,28 @@ const _steps: Step[] = [
     state: LoadingState.IN_PROGRESS,
   },
   {
-    title: "Redeem the token",
+    title: "Checking user balance",
     state: LoadingState.PENDING,
   },
   {
-    title: "Confirming the transaction",
+    title: "Getting token spending approval",
+    state: LoadingState.PENDING,
+  },
+  {
+    title: "Waiting for approval transaction confirmation",
+    state: LoadingState.PENDING,
+  },
+  {
+    title: "Redeeming the token",
+    state: LoadingState.PENDING,
+  },
+  {
+    title: "Waiting for redeem transaction confirmation",
     state: LoadingState.PENDING,
   },
 ];
 
-const RedeemModal = ({
+const RedeemWithERC20Modal = ({
   setShowModal,
   showModal,
   walletAddress,
@@ -86,35 +101,44 @@ const RedeemModal = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const mintWithETH = async () => {
+  const redeemWithERC20 = async () => {
     try {
-      // Step 1: Fetch Metadata
-      const response = await getMetadata(
-        0,
-        orderId,
+      // Step 0
+      const redeemData = (await getMetadata(0, orderId, paymentToken, walletAddress)).data;
+      // Step 1
+      const fee = BigNumber.from(redeemData.fee)
+      await verifyUserBalance(1, walletAddress, paymentToken, fee);
+      // Step 2-3
+      await processERC20Approval(
+        2,
+        walletAddress,
         paymentToken,
-        walletAddress
+        fee
       );
-      console.log("Redeem response:", response);
-
-      // Check if the metadata exists
-      if (!response.data || !response.data.signature) {
-        setMetaDataExists(false);
-      } else {
-        const redeemData = response.data;
-        setMetaDataExists(true);
-        await processRedeemWithETH(
-          1,
-          redeemData.ids ?? [],
-          redeemData.amounts ?? [],
-          redeemData.orderId ?? "",
-          redeemData.fee,
-          walletAddress,
-          redeemData.signature,
-          redeemData.timestamp
-        );
+      // Step 4-5
+      console.log("Starting Redemption with ERC20");
+      await processRedeemWithERC20(
+        4,
+        redeemData.ids ?? [],
+        redeemData.amounts ?? [],
+        redeemData.orderId ?? "",
+        redeemData.fee,
+        walletAddress,
+        paymentToken,
+        redeemData.signature,
+        redeemData.timestamp
+      );
+    } catch (error) {
+      if (errorMessage == null) {
+        setErrorMessage((err) => {
+          if (err == null) {
+            return "An unexpected error has been encountered";
+          }
+          return err;
+        });
       }
-    } catch (error) {}
+      setTxCompleted(true);
+    }
   };
 
   const getMetadata = async (
@@ -164,15 +188,11 @@ const RedeemModal = ({
     }
   };
 
-  const processRedeemWithETH = async (
+  const verifyUserBalance = async (
     _stepNumber: number,
-    _ids: string[],
-    _amounts: string[],
-    _orderId: string,
-    _feeInWei: string,
     _walletAddress: Address,
-    _signature: string,
-    _timestamp: string
+    _paymentToken: Address,
+    _price: BigNumber
   ) => {
     setSteps((steps_) => {
       const newSteps = steps_.slice();
@@ -182,7 +202,172 @@ const RedeemModal = ({
       };
       return newSteps;
     });
-    const paymentToken = zeroAddress;
+    // Simulate Balance Check
+    try {
+      const result = await readContract(config, {
+        abi: erc20Abi,
+        address: paymentToken,
+        functionName: "balanceOf",
+        args: [_walletAddress],
+      });
+      const totalPrice = BigNumber.from(_price).toBigInt();
+      if (result < totalPrice) {
+        throw new Error("Insufficient balance");
+      }
+    } catch (error: any) {
+      setSteps((steps_) => {
+        const newSteps = steps_.slice();
+        newSteps[_stepNumber] = {
+          ...newSteps[_stepNumber],
+          state: LoadingState.FAILED,
+        };
+        return newSteps;
+      });
+      setErrorMessage("Insufficient balance");
+      setTxCompleted(true);
+      throw new Error("Error: Insufficient balance");
+    }
+    setSteps((steps_) => {
+      const newSteps = steps_.slice();
+      newSteps[_stepNumber] = {
+        ...newSteps[_stepNumber],
+        state: LoadingState.DONE,
+      };
+      return newSteps;
+    });
+  };
+
+  const processERC20Approval = async (
+    _stepNumber: number,
+    _walletAddress: Address,
+    _paymentToken: Address,
+    _price: BigNumber
+  ) => {
+    console.log("Starting Step 2");
+    setSteps((steps_) => {
+      const newSteps = steps_.slice();
+      newSteps[_stepNumber] = {
+        ...newSteps[_stepNumber],
+        state: LoadingState.IN_PROGRESS,
+      };
+      return newSteps;
+    });
+    // Simulate Approval
+    try {
+      await simulateContract(config, {
+        abi: USDTABI,
+        address: paymentToken,
+        functionName: "approve",
+        args: [
+          CryptroviaAddress,
+          BigNumber.from(_price).toBigInt(),
+        ],
+      });
+    } catch (error: any) {
+      console.log("Simulate Approval Error: ", { error });
+      const _e = error as ContractFunctionRevertedErrorType;
+      // if (_e.shortMessage.indexOf("returned no data") === -1) {
+      console.log("throwing after no data Approval Error");
+      setSteps((steps_) => {
+        const newSteps = steps_.slice();
+        newSteps[_stepNumber] = {
+          ...newSteps[_stepNumber],
+          state: LoadingState.FAILED,
+        };
+        return newSteps;
+      });
+      setErrorMessage(getErrorMessage(_e.shortMessage));
+      throw error;
+      // }
+    }
+    // Send Approval Transaction
+    try {
+      const hash = await writeContract(config, {
+        abi: USDTABI,
+        address: paymentToken,
+        functionName: "approve",
+        args: [
+          CryptroviaAddress,
+          BigNumber.from(_price).toBigInt(),
+        ],
+      });
+      console.log("Step 2 Done");
+      setSteps((steps_) => {
+        const newSteps = steps_.slice();
+        newSteps[_stepNumber] = {
+          ...newSteps[_stepNumber],
+          state: LoadingState.DONE,
+        };
+        newSteps[_stepNumber + 1] = {
+          ...newSteps[_stepNumber + 1],
+          state: LoadingState.IN_PROGRESS,
+        };
+        return newSteps;
+      });
+      console.log("Step 3 Started");
+      // Watch for confirmations
+      await new Promise((resolve) => {
+        const unwatch = watchBlockNumber(config, {
+          onBlockNumber: async (blockNumber) => {
+            const confirmations = await getTransactionConfirmations(config, {
+              hash,
+            });
+            if (confirmations >= 3) {
+              setSteps((steps_) => {
+                const newSteps = steps_.slice();
+                newSteps[_stepNumber + 1] = {
+                  ...newSteps[_stepNumber + 1],
+                  state: LoadingState.DONE,
+                };
+                return newSteps;
+              });
+              console.log("STEP3 DONE", _stepNumber);
+              unwatch();
+              resolve("done");
+            }
+          },
+        });
+      });
+      return;
+    } catch (error) {
+      console.log("Approval Tx Err: ", { error });
+      const _e = error as TransactionExecutionErrorType;
+      if (_e.shortMessage.indexOf("returned no data") === -1) {
+        setSteps((steps_) => {
+          const newSteps = steps_.slice();
+          newSteps[_stepNumber] = {
+            ...newSteps[_stepNumber],
+            state: LoadingState.FAILED,
+          };
+          return newSteps;
+        });
+        setErrorMessage(getErrorMessage(_e.shortMessage));
+        setTxCompleted(true);
+        throw error;
+      }
+    }
+  };
+
+  const processRedeemWithERC20 = async (
+    _stepNumber: number,
+    _ids: string[],
+    _amounts: string[],
+    _orderId: string,
+    _feeInWei: string,
+    _walletAddress: Address,
+    _paymentToken: Address,
+    _signature: string,
+    _timestamp: string
+  ) => {
+    console.log("STEP 4 LOADING")
+    setSteps((steps_) => {
+      const newSteps = steps_.slice();
+      newSteps[_stepNumber] = {
+        ...newSteps[_stepNumber],
+        state: LoadingState.IN_PROGRESS,
+      };
+      return newSteps;
+    });
     try {
       await simulateContract(config, {
         abi: CryptroviaABI,
@@ -193,13 +378,13 @@ const RedeemModal = ({
           _amounts,
           _orderId,
           _timestamp,
-          paymentToken,
+          _paymentToken,
           BigNumber.from(_feeInWei).toBigInt(),
           _signature,
-        ],
-        value: BigNumber.from(_feeInWei).toBigInt(),
+        ]
       });
     } catch (error: any) {
+      console.log("Caught Error: ", error);
       const _e = error as ContractFunctionRevertedErrorType;
       setSteps((steps_) => {
         const newSteps = steps_.slice();
@@ -207,7 +392,7 @@ const RedeemModal = ({
           ...newSteps[_stepNumber],
           state: LoadingState.FAILED,
         };
-        newSteps[1] = { ...newSteps[1], state: LoadingState.IN_PROGRESS };
+        // newSteps[_stepNumber] = { ...newSteps[_stepNumber], state: LoadingState.IN_PROGRESS };
         return newSteps;
       });
       setErrorMessage(getErrorMessage(_e.shortMessage));
@@ -226,11 +411,11 @@ const RedeemModal = ({
           paymentToken,
           BigNumber.from(_feeInWei).toBigInt(),
           _signature,
-        ],
-        value: BigNumber.from(_feeInWei).toBigInt(),
+        ]
       });
-
+      console.log("STEP 4 DONE");
       setTxHash(hash);
+      console.log(_stepNumber);
       setSteps((steps_) => {
         const newSteps = steps_.slice();
         newSteps[_stepNumber] = {
@@ -244,11 +429,21 @@ const RedeemModal = ({
         return newSteps;
       });
 
+      console.log("STEP 5 LOADING");
       const unwatch = watchBlockNumber(config, {
         onBlockNumber: async (blockNumber) => {
-          const confirmations = await getTransactionConfirmations(config, {
-            hash,
-          });
+          let confirmations: bigint = BigInt(0);
+          while(true) {
+            try {
+              confirmations = await getTransactionConfirmations(config, {
+                hash,
+              });
+              if(confirmations >3) {break;} 
+            } catch (e) {
+              continue;
+            }
+          }
+
           if (confirmations >= 3) {
             unwatch();
             setSteps((steps_) => {
@@ -263,6 +458,7 @@ const RedeemModal = ({
           }
         },
       });
+      console.log("STEP 5 DONE");
     } catch (error) {
       const _e = error as TransactionExecutionErrorType;
       setSteps((steps_) => {
@@ -352,7 +548,7 @@ const RedeemModal = ({
   return (
     <ReactModal
       isOpen={showModal}
-      onAfterOpen={mintWithETH}
+      onAfterOpen={redeemWithERC20}
       contentLabel="Minimal Modal Example"
       className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none"
       overlayClassName="overlay z-30 overflow-hidden"
@@ -369,8 +565,8 @@ const RedeemModal = ({
           <div className="mt-3 text-center sm:mt-5">
             <h3 className="text-lg leading-6 font-medium text-gray-900">
               {metaDataExists === false
-                ? "Register to Mint Token"
-                : "Token Minting Process"}
+                ? "Register to Redeem Token"
+                : "Token Redemption Process"}
             </h3>
             {loading ? (
               <div className="flex justify-center items-center mt-5">
@@ -399,6 +595,7 @@ const RedeemModal = ({
                     Transaction Hash: {txHash}
                   </div>
                 )}
+                
                 {!errorMessage && txCompleted && (
                   <Link
                     to={`/success/${orderId}`}
@@ -427,4 +624,4 @@ const RedeemModal = ({
   );
 };
 
-export default RedeemModal;
+export default RedeemWithERC20Modal;
