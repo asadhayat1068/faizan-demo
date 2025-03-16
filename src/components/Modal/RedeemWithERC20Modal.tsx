@@ -27,6 +27,7 @@ import { ReactComponent as ThreeDots } from "../../asserts/icons/3dots.svg";
 import { ReactComponent as ErrorIcon } from "../../asserts/icons/error.svg";
 import RegistrationForm from "./Kyc";
 import { USDTABI } from "../../providers/Contract/usdt_abit";
+import { Link, redirect } from "react-router-dom";
 
 interface RedeemModalProps {
   setShowModal: (show: boolean) => void;
@@ -594,7 +595,19 @@ const RedeemWithERC20Modal = ({
                     Transaction Hash: {txHash}
                   </div>
                 )}
-                {txCompleted && (
+                
+                {!errorMessage && txCompleted && (
+                  <Link
+                    to={`/success/${orderId}`}
+                    onClick={() => setShowModal(false)}
+                  >
+                  <button
+                    className="mt-5 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm"
+                  >
+                    Close
+                  </button></Link>
+                )}
+                {errorMessage && txCompleted && (
                   <button
                     onClick={() => setShowModal(false)}
                     className="mt-5 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm"

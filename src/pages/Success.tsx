@@ -1,11 +1,11 @@
-import React, { useEffect } from "react";
-import { useLocation } from 'react-router-dom';
+import { useEffect } from "react";
+import { useParams } from 'react-router-dom';
 import { useAPI } from "../apiContext";
 import { useCurrencySelector } from "../providers/CurrencySelector/currencySelectorProvider";
 import { useAccount } from "wagmi";
+
 const Success = () => {
-  const location = useLocation();
-  const { orderId } = location.state || {}; // Retrieve the orderId from the state if available
+  const { orderId } = useParams();
   const { redeemProducts } = useAPI();
   const { currency } = useCurrencySelector();
   const { address: walletId } = useAccount();

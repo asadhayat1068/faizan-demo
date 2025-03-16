@@ -50,7 +50,7 @@ export const hashRouter = createHashRouter([
         element: <CheckOut />,
       },
       {
-        path: "/success",
+        path: "/success/:orderId",
         element: <Success />,
       },
     ],
